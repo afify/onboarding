@@ -55,9 +55,6 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      if (this.weeks.length > 0) {
-        this.expandedWeek = this.weeks[0].id;
-      }
     },
 
     async loadData() {

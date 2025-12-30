@@ -9,6 +9,7 @@ document.addEventListener('alpine:init', () => {
     get trainees() { return Alpine.store('app').trainees; },
     get mentors() { return Alpine.store('app').mentors; },
     get progress() { return Alpine.store('app').progress; },
+    get categories() { return Alpine.store('app').categories; },
     get activities() { return Alpine.store('app').activityLog; },
 
     notes: [],
@@ -196,6 +197,33 @@ document.addEventListener('alpine:init', () => {
       }
 
       return Math.round((count / total) * 100);
+    },
+
+    getBlockedCount() {
+      return this.progress.filter(p => p.status === 'blocked').length;
+    },
+
+    getWeekCompletionPercent(weekId) {
+      const weekTasks = this.tasks.filter(t => t.week_id === weekId);
+      if (weekTasks.length === 0 || this.trainees.length === 0) return 0;
+
+      const totalPossible = weekTasks.length * this.trainees.length;
+      const completed = this.progress.filter(p => {
+        const task = this.tasks.find(t => t.id === p.task_id);
+        return task && task.week_id === weekId && p.status === 'done';
+      }).length;
+
+      return Math.round((completed / totalPossible) * 100);
+    },
+
+    getCategoryTaskCount(categoryId) {
+      return this.tasks.filter(t => t.category_id === categoryId).length;
+    },
+
+    getCategoryPercent(categoryId) {
+      if (this.tasks.length === 0) return 0;
+      const count = this.getCategoryTaskCount(categoryId);
+      return Math.round((count / this.tasks.length) * 100);
     },
 
     getTraineeNotes(traineeId) {
