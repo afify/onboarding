@@ -12,6 +12,7 @@ document.addEventListener('alpine:init', () => {
     showAddModal: false,
     showEditModal: false,
     showDeleteModal: false,
+    alert: { show: false, type: '', message: '' },
     newTrainee: {
       name: '',
       email: '',
@@ -52,6 +53,11 @@ document.addEventListener('alpine:init', () => {
         .subscribe();
     },
 
+    showAlert(type, message) {
+      this.alert = { show: true, type, message };
+      setTimeout(() => { this.alert.show = false; }, 4000);
+    },
+
     getInitials(name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     },
@@ -90,8 +96,14 @@ document.addEventListener('alpine:init', () => {
       const name = sanitizeInput(this.newTrainee.name, 100);
       const email = this.newTrainee.email ? sanitizeInput(this.newTrainee.email, 254) : null;
 
-      if (!isValidName(name)) return;
-      if (email && !isValidEmail(email)) return;
+      if (!isValidName(name)) {
+        this.showAlert('error', 'Invalid name format');
+        return;
+      }
+      if (email && !isValidEmail(email)) {
+        this.showAlert('error', 'Invalid email format');
+        return;
+      }
 
       const { error } = await supabase.from('trainees').insert({
         name,
@@ -100,7 +112,10 @@ document.addEventListener('alpine:init', () => {
         start_date: this.newTrainee.start_date
       });
 
-      if (!error) {
+      if (error) {
+        this.showAlert('error', error.message || 'Failed to add trainee');
+      } else {
+        this.showAlert('success', `Trainee "${name}" added successfully`);
         this.newTrainee = {
           name: '',
           email: '',
@@ -120,8 +135,14 @@ document.addEventListener('alpine:init', () => {
       const name = sanitizeInput(this.editingTrainee.name, 100);
       const email = this.editingTrainee.email ? sanitizeInput(this.editingTrainee.email, 254) : null;
 
-      if (!isValidName(name)) return;
-      if (email && !isValidEmail(email)) return;
+      if (!isValidName(name)) {
+        this.showAlert('error', 'Invalid name format');
+        return;
+      }
+      if (email && !isValidEmail(email)) {
+        this.showAlert('error', 'Invalid email format');
+        return;
+      }
 
       const { error } = await supabase
         .from('trainees')
@@ -133,7 +154,10 @@ document.addEventListener('alpine:init', () => {
         })
         .eq('id', this.editingTrainee.id);
 
-      if (!error) {
+      if (error) {
+        this.showAlert('error', error.message || 'Failed to update trainee');
+      } else {
+        this.showAlert('success', `Trainee "${name}" updated successfully`);
         this.showEditModal = false;
         this.editingTrainee = null;
       }
@@ -152,7 +176,10 @@ document.addEventListener('alpine:init', () => {
         .delete()
         .eq('id', this.deleteTarget.id);
 
-      if (!error) {
+      if (error) {
+        this.showAlert('error', error.message || 'Failed to delete trainee');
+      } else {
+        this.showAlert('success', `Trainee "${this.deleteTarget.name}" deleted successfully`);
         this.showDeleteModal = false;
         this.deleteTarget = null;
       }

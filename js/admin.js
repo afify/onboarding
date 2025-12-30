@@ -172,17 +172,29 @@ document.addEventListener('alpine:init', () => {
 
     async saveMentor() {
       try {
+        const name = sanitizeInput(this.editingMentor.name, 100);
+        const role = this.editingMentor.role;
+
+        if (!isValidName(name)) {
+          this.showAlert('error', 'Invalid name format');
+          return;
+        }
+        if (!['admin', 'mentor'].includes(role)) {
+          this.showAlert('error', 'Invalid role');
+          return;
+        }
+
         const { error } = await supabase
           .from('mentors')
           .update({
-            name: this.editingMentor.name,
-            role: this.editingMentor.role
+            name,
+            role
           })
           .eq('id', this.editingMentor.id);
 
         if (error) throw error;
 
-        this.showAlert('success', `Mentor "${this.editingMentor.name}" updated`);
+        this.showAlert('success', `Mentor "${name}" updated`);
         this.showEditMentorModal = false;
         this.editingMentor = null;
         await this.loadData();
@@ -198,11 +210,23 @@ document.addEventListener('alpine:init', () => {
 
     async saveTrainee() {
       try {
+        const name = sanitizeInput(this.editingTrainee.name, 100);
+        const email = this.editingTrainee.email ? sanitizeInput(this.editingTrainee.email, 254) : null;
+
+        if (!isValidName(name)) {
+          this.showAlert('error', 'Invalid name format');
+          return;
+        }
+        if (email && !isValidEmail(email)) {
+          this.showAlert('error', 'Invalid email format');
+          return;
+        }
+
         const { error } = await supabase
           .from('trainees')
           .update({
-            name: this.editingTrainee.name,
-            email: this.editingTrainee.email || null,
+            name,
+            email,
             assigned_mentor_id: this.editingTrainee.assigned_mentor_id || null,
             start_date: this.editingTrainee.start_date
           })
@@ -210,7 +234,7 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
-        this.showAlert('success', `Trainee "${this.editingTrainee.name}" updated`);
+        this.showAlert('success', `Trainee "${name}" updated`);
         this.showEditTraineeModal = false;
         this.editingTrainee = null;
         await this.loadData();

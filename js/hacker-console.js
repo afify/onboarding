@@ -1,3 +1,11 @@
+// Debug console - disabled in production unless VITE_DEBUG_CONSOLE=true
+const isProduction = import.meta.env?.PROD ?? false;
+const debugEnabled = import.meta.env?.VITE_DEBUG_CONSOLE === 'true';
+
+if (isProduction && !debugEnabled) {
+  // Skip loading debug console in production
+} else {
+
 function escapeHtml(str) {
   if (str == null) return '';
   if (typeof str !== 'string') str = String(str);
@@ -336,3 +344,5 @@ if (document.body) {
 } else {
   document.addEventListener('DOMContentLoaded', createConsole);
 }
+
+} // End of debug console conditional
