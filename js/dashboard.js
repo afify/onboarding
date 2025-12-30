@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { isValidEmail, isValidName, sanitizeInput } from './security.js';
+import { isValidEmail, isValidName, sanitizeInput, escapeHtml } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('dashboard', () => ({
@@ -22,6 +22,7 @@ document.addEventListener('alpine:init', () => {
     editingNote: { id: null, content: '' },
     deleteNoteTarget: null,
     newNote: '',
+    alert: { show: false, type: '', message: '' },
     newTrainee: {
       name: '',
       email: '',
@@ -101,6 +102,11 @@ document.addEventListener('alpine:init', () => {
       } else if (payload.eventType === 'DELETE') {
         store.progress = store.progress.filter(p => p.id !== payload.old.id);
       }
+    },
+
+    showAlert(type, message) {
+      this.alert = { show: true, type, message };
+      setTimeout(() => { this.alert.show = false; }, 4000);
     },
 
     getInitials(name) {
@@ -385,10 +391,16 @@ document.addEventListener('alpine:init', () => {
       const name = sanitizeInput(this.newTrainee.name, 100);
       const email = this.newTrainee.email ? sanitizeInput(this.newTrainee.email, 254) : null;
 
-      if (!isValidName(name)) return;
-      if (email && !isValidEmail(email)) return;
+      if (!isValidName(name)) {
+        this.showAlert('error', 'Invalid name format');
+        return;
+      }
+      if (email && !isValidEmail(email)) {
+        this.showAlert('error', 'Invalid email format');
+        return;
+      }
 
-      await supabase
+      const { error } = await supabase
         .from('trainees')
         .insert({
           name,
@@ -397,13 +409,18 @@ document.addEventListener('alpine:init', () => {
           start_date: this.newTrainee.start_date
         });
 
-      this.newTrainee = {
-        name: '',
-        email: '',
-        assigned_mentor_id: '',
-        start_date: new Date().toISOString().split('T')[0]
-      };
-      this.showAddModal = false;
+      if (error) {
+        this.showAlert('error', error.message || 'Failed to add trainee');
+      } else {
+        this.showAlert('success', `Trainee "${name}" added successfully`);
+        this.newTrainee = {
+          name: '',
+          email: '',
+          assigned_mentor_id: '',
+          start_date: new Date().toISOString().split('T')[0]
+        };
+        this.showAddModal = false;
+      }
     },
 
     formatTime(timestamp) {
@@ -419,14 +436,14 @@ document.addEventListener('alpine:init', () => {
 
     formatActivity(activity) {
       const mentor = this.mentors.find(m => m.id === activity.mentor_id);
-      const mentorName = mentor?.name || 'Someone';
+      const mentorName = escapeHtml(mentor?.name || 'Someone');
 
       if (activity.entity_type === 'progress' && activity.details) {
         const task = this.tasks.find(t => t.id === activity.details.task_id);
         const trainee = this.trainees.find(t => t.id === activity.details.trainee_id);
-        const taskName = task?.title || 'a task';
-        const traineeName = trainee?.name || 'a trainee';
-        const status = activity.details.status;
+        const taskName = escapeHtml(task?.title || 'a task');
+        const traineeName = escapeHtml(trainee?.name || 'a trainee');
+        const status = escapeHtml(activity.details.status || 'updated');
 
         return `<strong>${mentorName}</strong> marked <span class="highlight">${taskName}</span> as ${status} for ${traineeName}`;
       }
