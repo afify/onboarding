@@ -1,7 +1,3 @@
--- PayTabs Onboarding Tracker - Database Schema
--- Run this in Supabase SQL Editor
-
--- Team Leaders (linked to Supabase Auth users)
 CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
@@ -10,7 +6,6 @@ CREATE TABLE IF NOT EXISTS leads (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trainees
 CREATE TABLE IF NOT EXISTS trainees (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -20,7 +15,6 @@ CREATE TABLE IF NOT EXISTS trainees (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Weekly curriculum structure
 CREATE TABLE IF NOT EXISTS weeks (
   id SERIAL PRIMARY KEY,
   week_number INT UNIQUE NOT NULL,
@@ -28,7 +22,6 @@ CREATE TABLE IF NOT EXISTS weeks (
   description TEXT
 );
 
--- Tasks within each week
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   week_id INT REFERENCES weeks(id) ON DELETE CASCADE,
@@ -38,7 +31,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   order_index INT DEFAULT 0
 );
 
--- Progress tracking (per trainee per task)
 CREATE TABLE IF NOT EXISTS progress (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trainee_id UUID REFERENCES trainees(id) ON DELETE CASCADE,
@@ -49,7 +41,6 @@ CREATE TABLE IF NOT EXISTS progress (
   UNIQUE(trainee_id, task_id)
 );
 
--- Notes/comments
 CREATE TABLE IF NOT EXISTS notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trainee_id UUID REFERENCES trainees(id) ON DELETE CASCADE,
@@ -59,7 +50,6 @@ CREATE TABLE IF NOT EXISTS notes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Activity feed
 CREATE TABLE IF NOT EXISTS activity_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
@@ -70,7 +60,6 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable Row Level Security
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trainees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weeks ENABLE ROW LEVEL SECURITY;
@@ -79,9 +68,6 @@ ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-
--- Leads: authenticated users can read all, only admin can insert/update/delete
 CREATE POLICY "Authenticated users can view leads" ON leads
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
@@ -90,15 +76,12 @@ CREATE POLICY "Admin can manage leads" ON leads
     EXISTS (SELECT 1 FROM leads WHERE id = auth.uid() AND role = 'admin')
   );
 
--- Allow insert for new user registration (handled by trigger)
 CREATE POLICY "Users can insert their own lead profile" ON leads
   FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Trainees: all authenticated users can CRUD
 CREATE POLICY "Authenticated users can manage trainees" ON trainees
   FOR ALL USING (auth.uid() IS NOT NULL);
 
--- Weeks: read-only for all, admin can manage
 CREATE POLICY "All can view weeks" ON weeks
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
@@ -107,7 +90,6 @@ CREATE POLICY "Admin can manage weeks" ON weeks
     EXISTS (SELECT 1 FROM leads WHERE id = auth.uid() AND role = 'admin')
   );
 
--- Tasks: read-only for all, admin can manage
 CREATE POLICY "All can view tasks" ON tasks
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
@@ -116,27 +98,22 @@ CREATE POLICY "Admin can manage tasks" ON tasks
     EXISTS (SELECT 1 FROM leads WHERE id = auth.uid() AND role = 'admin')
   );
 
--- Progress: all authenticated users can CRUD
 CREATE POLICY "Authenticated users can manage progress" ON progress
   FOR ALL USING (auth.uid() IS NOT NULL);
 
--- Notes: all authenticated users can CRUD
 CREATE POLICY "Authenticated users can manage notes" ON notes
   FOR ALL USING (auth.uid() IS NOT NULL);
 
--- Activity log: all authenticated users can read and insert
 CREATE POLICY "Authenticated users can view activity" ON activity_log
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Authenticated users can log activity" ON activity_log
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
--- Enable Realtime for progress and activity_log tables
 ALTER PUBLICATION supabase_realtime ADD TABLE progress;
 ALTER PUBLICATION supabase_realtime ADD TABLE activity_log;
 ALTER PUBLICATION supabase_realtime ADD TABLE notes;
 
--- Function to log activity
 CREATE OR REPLACE FUNCTION log_activity()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -155,7 +132,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Triggers for activity logging
 CREATE TRIGGER progress_activity_trigger
   AFTER INSERT OR UPDATE OR DELETE ON progress
   FOR EACH ROW EXECUTE FUNCTION log_activity();

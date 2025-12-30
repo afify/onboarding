@@ -1,20 +1,18 @@
-// Curriculum page entry
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
+import { initStore } from './store.js';
 
 Alpine.plugin(collapse);
 window.Alpine = Alpine;
 
-// Hacker console (vanilla JS - no Alpine dependency)
+initStore(Alpine);
+
 import './hacker-console.js';
 
-// Shared components
 import './navbar.js';
 import './sidebar.js';
 import './activity-feed.js';
 
-// Page-specific component
 import './curriculum.js';
 
-// Start Alpine after all components are registered
 Alpine.start();

@@ -1,5 +1,5 @@
-// Activity Feed Component (ES Module)
 import { supabase } from './supabase-client.js';
+import { escapeHtml } from './security.js';
 
 const activityHTML = `
   <aside class="sidebar-right" x-data="activityFeed()">
@@ -8,10 +8,10 @@ const activityHTML = `
       <div class="activity-live">LIVE</div>
     </div>
     <div class="activity-list">
-      <template x-if="activities.length === 0">
+      <template x-if="$store.app.activityLog.length === 0">
         <div class="activity-empty">No activity yet</div>
       </template>
-      <template x-for="activity in activities.slice(0, 20)" :key="activity.id">
+      <template x-for="activity in $store.app.activityLog.slice(0, 20)" :key="activity.id">
         <div class="activity-item">
           <div class="activity-avatar" x-text="getMentorInitials(activity.mentor_id)"></div>
           <div class="activity-content">
@@ -24,7 +24,6 @@ const activityHTML = `
   </aside>
 `;
 
-// Inject activity feed when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const layout = document.querySelector('.app-layout, .admin-layout, .reports-layout');
   if (layout) {
@@ -32,39 +31,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Register Alpine component
 document.addEventListener('alpine:init', () => {
   Alpine.data('activityFeed', () => ({
-    activities: [],
-    mentors: [],
-    tasks: [],
-    trainees: [],
-    weeks: [],
     subscription: null,
 
     async init() {
       try {
-        // Load mentors, tasks, trainees, weeks for formatting
-        const [mentorsRes, tasksRes, traineesRes, weeksRes, activityRes] = await Promise.all([
-          supabase.from('mentors').select('id, name'),
-          supabase.from('tasks').select('id, title'),
-          supabase.from('trainees').select('id, name'),
-          supabase.from('weeks').select('id, week_number, title'),
-          supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(50)
-        ]);
+        const store = Alpine.store('app');
 
-        this.mentors = mentorsRes.data || [];
-        this.tasks = tasksRes.data || [];
-        this.trainees = traineesRes.data || [];
-        this.weeks = weeksRes.data || [];
-        this.activities = activityRes.data || [];
+        if (!store.dataReady) {
+          await store.initAuth();
+          await store.loadData();
+        }
 
-        // Subscribe to realtime updates
         this.subscription = supabase
           .channel('activity-feed')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_log' }, (payload) => {
-            this.activities.unshift(payload.new);
-            if (this.activities.length > 50) this.activities.pop();
+            store.activityLog.unshift(payload.new);
+            if (store.activityLog.length > 50) store.activityLog.pop();
           })
           .subscribe();
 
@@ -80,61 +64,56 @@ document.addEventListener('alpine:init', () => {
     },
 
     getMentorInitials(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
+      const mentor = Alpine.store('app').mentors.find(m => m.id === mentorId);
       if (!mentor) return '??';
       return mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     },
 
     formatActivity(activity) {
-      const mentor = this.mentors.find(m => m.id === activity.mentor_id);
-      const mentorName = mentor?.name || 'Someone';
+      const store = Alpine.store('app');
+      const mentor = store.mentors.find(m => m.id === activity.mentor_id);
+      const mentorName = escapeHtml(mentor?.name || 'Someone');
       const action = activity.action;
 
-      // Progress updates
       if (activity.entity_type === 'progress' && activity.details) {
-        const task = this.tasks.find(t => t.id === activity.details.task_id);
-        const trainee = this.trainees.find(t => t.id === activity.details.trainee_id);
-        const taskTitle = task?.title || 'a task';
-        const traineeName = trainee?.name || 'trainee';
+        const task = store.tasks.find(t => t.id === activity.details.task_id);
+        const trainee = store.trainees.find(t => t.id === activity.details.trainee_id);
+        const taskTitle = escapeHtml(task?.title || 'a task');
+        const traineeName = escapeHtml(trainee?.name || 'trainee');
         const status = activity.details.status;
-        const statusText = status === 'done' ? 'completed' : status === 'in_progress' ? 'started' : status === 'blocked' ? 'blocked' : status;
+        const statusText = status === 'done' ? 'completed' : status === 'in_progress' ? 'started' : status === 'blocked' ? 'blocked' : escapeHtml(status);
         return `<strong>${mentorName}</strong> marked <span class="highlight">${taskTitle}</span> as ${statusText} for ${traineeName}`;
       }
 
-      // Notes
       if (activity.entity_type === 'notes') {
         if (action === 'DELETE') return `<strong>${mentorName}</strong> deleted a note`;
         return `<strong>${mentorName}</strong> added a note`;
       }
 
-      // Trainees
       if (activity.entity_type === 'trainees') {
-        const traineeName = activity.details?.name || 'a trainee';
+        const traineeName = escapeHtml(activity.details?.name || 'a trainee');
         if (action === 'INSERT') return `<strong>${mentorName}</strong> added trainee <span class="highlight">${traineeName}</span>`;
         if (action === 'UPDATE') return `<strong>${mentorName}</strong> updated trainee <span class="highlight">${traineeName}</span>`;
         if (action === 'DELETE') return `<strong>${mentorName}</strong> removed trainee <span class="highlight">${traineeName}</span>`;
       }
 
-      // Weeks
       if (activity.entity_type === 'weeks') {
-        const weekNum = activity.details?.week_number || '?';
-        const weekTitle = activity.details?.title || '';
+        const weekNum = escapeHtml(activity.details?.week_number || '?');
+        const weekTitle = escapeHtml(activity.details?.title || '');
         if (action === 'INSERT') return `<strong>${mentorName}</strong> created <span class="highlight">Week ${weekNum}</span>${weekTitle ? ': ' + weekTitle : ''}`;
         if (action === 'UPDATE') return `<strong>${mentorName}</strong> updated <span class="highlight">Week ${weekNum}</span>`;
         if (action === 'DELETE') return `<strong>${mentorName}</strong> deleted <span class="highlight">Week ${weekNum}</span>`;
       }
 
-      // Tasks
       if (activity.entity_type === 'tasks') {
-        const taskTitle = activity.details?.title || 'a task';
+        const taskTitle = escapeHtml(activity.details?.title || 'a task');
         if (action === 'INSERT') return `<strong>${mentorName}</strong> created task <span class="highlight">${taskTitle}</span>`;
         if (action === 'UPDATE') return `<strong>${mentorName}</strong> updated task <span class="highlight">${taskTitle}</span>`;
         if (action === 'DELETE') return `<strong>${mentorName}</strong> deleted task <span class="highlight">${taskTitle}</span>`;
       }
 
-      // Mentors
       if (activity.entity_type === 'mentors') {
-        const mentorTargetName = activity.details?.name || 'a mentor';
+        const mentorTargetName = escapeHtml(activity.details?.name || 'a mentor');
         if (action === 'INSERT') return `<strong>${mentorName}</strong> added mentor <span class="highlight">${mentorTargetName}</span>`;
         if (action === 'UPDATE') return `<strong>${mentorName}</strong> updated mentor <span class="highlight">${mentorTargetName}</span>`;
         if (action === 'DELETE') return `<strong>${mentorName}</strong> removed mentor <span class="highlight">${mentorTargetName}</span>`;

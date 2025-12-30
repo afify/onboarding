@@ -1,16 +1,9 @@
-/* ═══════════════════════════════════════════════════════════
-   TRAINEES PAGE - PayTabs Onboarding Tracker
-   Trainees management page specific styles
-   ═══════════════════════════════════════════════════════════ */
-
-/* Trainees Grid */
 .trainees-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
 }
 
-/* Trainee Card */
 .trainee-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -73,7 +66,6 @@
   color: var(--accent-cyan);
 }
 
-/* Stats Row */
 .trainee-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -108,18 +100,15 @@
   margin-top: 0.25rem;
 }
 
-/* Progress bar in trainee cards */
 .trainee-stats .progress-bar {
   grid-column: 1 / -1;
   margin-top: 0.5rem;
 }
 
-/* Progress Section */
 .trainee-progress {
   margin-bottom: 1rem;
 }
 
-/* Actions */
 .trainee-actions {
   display: flex;
   gap: 0.5rem;
@@ -141,12 +130,10 @@
   height: 14px;
 }
 
-/* Empty State */
 .trainees-empty {
   grid-column: 1 / -1;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .trainees-grid {
     grid-template-columns: 1fr;

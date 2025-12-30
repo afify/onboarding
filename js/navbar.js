@@ -1,23 +1,26 @@
-// Navbar Component (ES Module)
-import { getCurrentUser, getMentorProfile, signOut } from './supabase-client.js';
+import { signOut } from './supabase-client.js';
+import { escapeHtml } from './security.js';
+
+const rawCompany = import.meta.env.VITE_COMPANY || 'Company';
+const company = escapeHtml(rawCompany);
+const companyInitials = escapeHtml(rawCompany.slice(0, 2).toUpperCase());
 
 const navbarHTML = `
   <nav class="navbar" x-data="navbarData()" x-cloak>
     <div class="nav-brand">
-      <div class="nav-logo">PT</div>
-      <div class="nav-title">PayTabs <span>Onboarding</span></div>
+      <div class="nav-logo">${companyInitials}</div>
+      <div class="nav-title">${company} <span>Onboarding</span></div>
     </div>
     <div class="nav-user">
       <div class="user-info">
-        <div class="user-name" x-text="userName">Loading...</div>
-        <div class="user-role" x-text="userRole"></div>
+        <div class="user-name" x-text="$store.app.mentor?.name || 'Loading...'">Loading...</div>
+        <div class="user-role" x-text="$store.app.mentor?.role || ''"></div>
       </div>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </div>
   </nav>
 `;
 
-// Inject navbar when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const layout = document.querySelector('.app-layout, .admin-layout, .reports-layout');
   if (layout) {
@@ -25,27 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Register Alpine component for navbar
 document.addEventListener('alpine:init', () => {
   Alpine.data('navbarData', () => ({
-    userName: 'Loading...',
-    userRole: '',
-
-    async init() {
-      try {
-        const user = await getCurrentUser();
-        if (user) {
-          const { data: mentor } = await getMentorProfile(user.id);
-          if (mentor) {
-            this.userName = mentor.name;
-            this.userRole = mentor.role;
-          }
-        }
-      } catch (e) {
-        console.error('Navbar init error:', e);
-      }
-    },
-
     async handleLogout() {
       try {
         await signOut();

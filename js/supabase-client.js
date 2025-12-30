@@ -9,7 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Auth helpers
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -33,7 +32,6 @@ export async function getCurrentUser() {
   return user
 }
 
-// Get mentor profile from our mentors table
 export async function getMentorProfile(userId) {
   const { data, error } = await supabase
     .from('mentors')
@@ -43,7 +41,6 @@ export async function getMentorProfile(userId) {
   return { data, error }
 }
 
-// Check if current user is admin
 export async function isAdmin() {
   const user = await getCurrentUser()
   if (!user) return false

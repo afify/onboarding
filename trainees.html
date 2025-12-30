@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>Trainees | PayTabs Onboarding</title>
+  <title>Trainees | Onboarding</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -23,7 +23,6 @@
 </head>
 <body>
   <div class="app-layout" x-data="traineesPage()" x-cloak>
-    <!-- Main Content -->
     <main class="main-content">
       <div class="page-header">
         <h1 class="page-title">Trainees</h1>
@@ -35,7 +34,6 @@
         </button>
       </div>
 
-      <!-- Empty State -->
       <template x-if="trainees.length === 0">
         <div class="empty-state">
           <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,7 +44,6 @@
         </div>
       </template>
 
-      <!-- Trainees Grid -->
       <div class="trainees-grid" x-show="trainees.length > 0">
         <template x-for="trainee in trainees" :key="trainee.id">
           <div class="trainee-card">
@@ -96,7 +93,6 @@
       </div>
     </main>
 
-    <!-- Add Trainee Modal -->
     <div class="modal-overlay" x-show="showAddModal" x-cloak @click.self="showAddModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -142,7 +138,6 @@
       </div>
     </div>
 
-    <!-- Edit Trainee Modal -->
     <div class="modal-overlay" x-show="showEditModal" x-cloak @click.self="showEditModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -188,7 +183,6 @@
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">

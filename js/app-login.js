@@ -1,13 +1,10 @@
-// Login page entry
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
-// Hacker console (must be first to intercept fetch)
 import './hacker-console.js';
 
 import { signIn, getSession, getMentorProfile } from './supabase-client.js';
 
-// Check if already logged in
 (async () => {
   const session = await getSession();
   if (session) {
@@ -15,7 +12,6 @@ import { signIn, getSession, getMentorProfile } from './supabase-client.js';
   }
 })();
 
-// Handle form submission
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('loginForm');
   form.addEventListener('submit', async (e) => {
@@ -54,5 +50,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Start Alpine
 Alpine.start();

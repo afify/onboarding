@@ -1,16 +1,16 @@
-import { supabase, getSession, getCurrentUser, getMentorProfile, isAdmin } from './supabase-client.js';
+import { supabase } from './supabase-client.js';
+import { sanitizeInput } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('curriculumPage', () => ({
-    // State
-    weeks: [],
-    tasks: [],
-    categories: [],
-    statuses: [],
-    expandedWeek: null,
-    isAdminUser: false,
+    get weeks() { return Alpine.store('app').weeks; },
+    get tasks() { return Alpine.store('app').tasks; },
+    get categories() { return Alpine.store('app').categories; },
+    get statuses() { return Alpine.store('app').statuses; },
+    get isAdminUser() { return Alpine.store('app').isAdmin; },
 
-    // Modal states
+    expandedWeek: null,
+
     showAddWeekModal: false,
     showEditWeekModal: false,
     showAddTaskModal: false,
@@ -23,14 +23,11 @@ document.addEventListener('alpine:init', () => {
     showAddStatusModal: false,
     showEditStatusModal: false,
 
-    // Delete confirmation state
     deleteTarget: null,
     deleteType: null,
 
-    // Alert state
     alert: { show: false, type: '', message: '' },
 
-    // Form data
     newWeek: { week_number: '', title: '', description: '' },
     editingWeek: null,
     newTask: { week_id: '', title: '', description: '', category_id: null, order_index: 1, day_number: 1 },
@@ -41,72 +38,37 @@ document.addEventListener('alpine:init', () => {
     newStatus: { name: '', label: '', color: '#6b7280', sort_order: 1 },
     editingStatus: null,
 
-    // Initialize
     async init() {
-      // Check authentication
-      const session = await getSession();
-      if (!session) {
+      const store = Alpine.store('app');
+
+      await store.initAuth();
+
+      if (!store.session) {
         window.location.href = '/';
         return;
       }
 
-      const user = await getCurrentUser();
-      const { data: mentor } = await getMentorProfile(user.id);
+      await store.loadData();
 
-      if (!mentor) {
+      if (!store.mentor) {
         window.location.href = '/';
         return;
       }
 
-      // Check if user is admin
-      this.isAdminUser = await isAdmin();
-
-      // Load data
-      await this.loadData();
-
-      // Expand first week by default
       if (this.weeks.length > 0) {
         this.expandedWeek = this.weeks[0].id;
       }
     },
 
     async loadData() {
-      // Load weeks
-      const { data: weeks } = await supabase
-        .from('weeks')
-        .select('*')
-        .order('week_number');
-      this.weeks = weeks || [];
-
-      // Load tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('order_index');
-      this.tasks = tasks || [];
-
-      // Load categories
-      const { data: categories } = await supabase
-        .from('task_categories')
-        .select('*')
-        .order('id');
-      this.categories = categories || [];
-
-      // Load statuses
-      const { data: statuses } = await supabase
-        .from('task_statuses')
-        .select('*')
-        .order('sort_order');
-      this.statuses = statuses || [];
+      await Alpine.store('app').refreshCurriculumData();
     },
 
-    // Alert helper
     showAlert(type, message) {
       this.alert = { show: true, type, message };
       setTimeout(() => { this.alert.show = false; }, 4000);
     },
 
-    // Helpers
     toggleWeek(weekId) {
       this.expandedWeek = this.expandedWeek === weekId ? null : weekId;
     },
@@ -120,7 +82,6 @@ document.addEventListener('alpine:init', () => {
     },
 
     getEstimatedDuration() {
-      // Each week = 5 working days
       return this.weeks.length * 5;
     },
 
@@ -140,19 +101,27 @@ document.addEventListener('alpine:init', () => {
       return learning?.id || (this.categories[0]?.id || null);
     },
 
-    // Week CRUD operations
     async addWeek() {
       try {
+        const title = sanitizeInput(this.newWeek.title, 200);
+        const description = sanitizeInput(this.newWeek.description, 1000) || null;
+        const weekNum = parseInt(this.newWeek.week_number);
+
+        if (!title || isNaN(weekNum) || weekNum < 1 || weekNum > 52) {
+          this.showAlert('error', 'Invalid week number or title');
+          return;
+        }
+
         const { error } = await supabase.from('weeks').insert({
-          week_number: parseInt(this.newWeek.week_number),
-          title: this.newWeek.title.trim(),
-          description: this.newWeek.description.trim() || null
+          week_number: weekNum,
+          title,
+          description
         });
 
         if (error) throw error;
 
         this.showAddWeekModal = false;
-        this.showAlert('success', `Week ${this.newWeek.week_number} created successfully`);
+        this.showAlert('success', `Week ${weekNum} created successfully`);
         this.newWeek = { week_number: '', title: '', description: '' };
         await this.loadData();
       } catch (err) {
@@ -169,18 +138,27 @@ document.addEventListener('alpine:init', () => {
 
     async saveWeek() {
       try {
+        const title = sanitizeInput(this.editingWeek.title, 200);
+        const description = sanitizeInput(this.editingWeek.description, 1000) || null;
+        const weekNum = parseInt(this.editingWeek.week_number);
+
+        if (!title || isNaN(weekNum) || weekNum < 1 || weekNum > 52) {
+          this.showAlert('error', 'Invalid week number or title');
+          return;
+        }
+
         const { error } = await supabase
           .from('weeks')
           .update({
-            week_number: parseInt(this.editingWeek.week_number),
-            title: this.editingWeek.title.trim(),
-            description: this.editingWeek.description?.trim() || null
+            week_number: weekNum,
+            title,
+            description
           })
           .eq('id', this.editingWeek.id);
 
         if (error) throw error;
 
-        this.showAlert('success', `Week ${this.editingWeek.week_number} updated successfully`);
+        this.showAlert('success', `Week ${weekNum} updated successfully`);
         this.showEditWeekModal = false;
         this.editingWeek = null;
         await this.loadData();
@@ -195,7 +173,6 @@ document.addEventListener('alpine:init', () => {
       this.showDeleteModal = true;
     },
 
-    // Task CRUD operations
     openAddTaskModal(week) {
       this.selectedWeekForTask = week;
       const nextOrder = this.getNextOrderIndex(week.id);
@@ -205,10 +182,18 @@ document.addEventListener('alpine:init', () => {
 
     async addTask() {
       try {
+        const title = sanitizeInput(this.newTask.title, 200);
+        const description = sanitizeInput(this.newTask.description, 2000) || null;
         const selectedOrder = parseInt(this.newTask.order_index);
+        const dayNumber = parseInt(this.newTask.day_number);
+
+        if (!title) {
+          this.showAlert('error', 'Task title is required');
+          return;
+        }
+
         const nextOrder = this.getNextOrderIndex(this.newTask.week_id);
 
-        // If inserting before existing tasks, shift them down
         if (selectedOrder < nextOrder) {
           const tasksToShift = this.tasks.filter(
             t => t.week_id === this.newTask.week_id && t.order_index >= selectedOrder
@@ -220,16 +205,16 @@ document.addEventListener('alpine:init', () => {
 
         const { error } = await supabase.from('tasks').insert({
           week_id: this.newTask.week_id,
-          title: this.newTask.title.trim(),
-          description: this.newTask.description.trim() || null,
+          title,
+          description,
           category_id: this.newTask.category_id,
           order_index: selectedOrder,
-          day_number: parseInt(this.newTask.day_number)
+          day_number: dayNumber
         });
 
         if (error) throw error;
 
-        this.showAlert('success', `Task "${this.newTask.title}" created successfully`);
+        this.showAlert('success', `Task "${title}" created successfully`);
         this.newTask = { week_id: '', title: '', description: '', category_id: null, order_index: 1 };
         this.showAddTaskModal = false;
         await this.loadData();
@@ -245,23 +230,28 @@ document.addEventListener('alpine:init', () => {
 
     async saveTask() {
       try {
+        const title = sanitizeInput(this.editingTask.title, 200);
+        const description = sanitizeInput(this.editingTask.description, 2000) || null;
+
+        if (!title) {
+          this.showAlert('error', 'Task title is required');
+          return;
+        }
+
         const newOrder = parseInt(this.editingTask.order_index);
         const originalTask = this.tasks.find(t => t.id === this.editingTask.id);
         const oldOrder = originalTask?.order_index || 0;
 
-        // Handle reordering if order changed
         if (newOrder !== oldOrder) {
           const weekTasks = this.tasks.filter(t => t.week_id === this.editingTask.week_id && t.id !== this.editingTask.id);
 
           if (newOrder < oldOrder) {
-            // Moving up: shift tasks between newOrder and oldOrder down
             for (const task of weekTasks) {
               if (task.order_index >= newOrder && task.order_index < oldOrder) {
                 await supabase.from('tasks').update({ order_index: task.order_index + 1 }).eq('id', task.id);
               }
             }
           } else {
-            // Moving down: shift tasks between oldOrder and newOrder up
             for (const task of weekTasks) {
               if (task.order_index > oldOrder && task.order_index <= newOrder) {
                 await supabase.from('tasks').update({ order_index: task.order_index - 1 }).eq('id', task.id);
@@ -273,8 +263,8 @@ document.addEventListener('alpine:init', () => {
         const { error } = await supabase
           .from('tasks')
           .update({
-            title: this.editingTask.title.trim(),
-            description: this.editingTask.description?.trim() || null,
+            title,
+            description,
             category_id: this.editingTask.category_id,
             order_index: newOrder,
             week_id: this.editingTask.week_id,
@@ -284,7 +274,7 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
-        this.showAlert('success', `Task "${this.editingTask.title}" updated successfully`);
+        this.showAlert('success', `Task "${title}" updated successfully`);
         this.showEditTaskModal = false;
         this.editingTask = null;
         await this.loadData();
@@ -299,11 +289,9 @@ document.addEventListener('alpine:init', () => {
       this.showDeleteModal = true;
     },
 
-    // Execute delete operation
     async executeDelete() {
       try {
         if (this.deleteType === 'week') {
-          // Delete will cascade to tasks due to foreign key constraint
           const { error } = await supabase
             .from('weeks')
             .delete()
@@ -346,7 +334,6 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // Category CRUD operations
     openCategoriesModal() {
       this.showCategoriesModal = true;
     },
@@ -358,9 +345,17 @@ document.addEventListener('alpine:init', () => {
 
     async addCategory() {
       try {
+        const name = sanitizeInput(this.newCategory.name, 50).toLowerCase().replace(/\s+/g, '_');
+        const label = sanitizeInput(this.newCategory.label, 100);
+
+        if (!name || !label) {
+          this.showAlert('error', 'Name and label are required');
+          return;
+        }
+
         const { error } = await supabase.from('task_categories').insert({
-          name: this.newCategory.name.trim().toLowerCase().replace(/\s+/g, '_'),
-          label: this.newCategory.label.trim(),
+          name,
+          label,
           color: this.newCategory.color,
           icon: this.newCategory.icon,
           has_score: this.newCategory.has_score
@@ -368,7 +363,7 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
-        this.showAlert('success', `Category "${this.newCategory.label}" created successfully`);
+        this.showAlert('success', `Category "${label}" created successfully`);
         this.newCategory = { name: '', label: '', color: '#00d4ff', icon: 'book', has_score: false };
         this.showAddCategoryModal = false;
         await this.loadData();
@@ -384,11 +379,19 @@ document.addEventListener('alpine:init', () => {
 
     async saveCategory() {
       try {
+        const name = sanitizeInput(this.editingCategory.name, 50).toLowerCase().replace(/\s+/g, '_');
+        const label = sanitizeInput(this.editingCategory.label, 100);
+
+        if (!name || !label) {
+          this.showAlert('error', 'Name and label are required');
+          return;
+        }
+
         const { error } = await supabase
           .from('task_categories')
           .update({
-            name: this.editingCategory.name.trim().toLowerCase().replace(/\s+/g, '_'),
-            label: this.editingCategory.label.trim(),
+            name,
+            label,
             color: this.editingCategory.color,
             icon: this.editingCategory.icon,
             has_score: this.editingCategory.has_score
@@ -397,7 +400,7 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
-        this.showAlert('success', `Category "${this.editingCategory.label}" updated successfully`);
+        this.showAlert('success', `Category "${label}" updated successfully`);
         this.showEditCategoryModal = false;
         this.editingCategory = null;
         await this.loadData();
@@ -416,7 +419,6 @@ document.addEventListener('alpine:init', () => {
       return this.tasks.filter(t => t.category_id === categoryId).length;
     },
 
-    // Status CRUD operations
     openStatusesModal() {
       this.showStatusesModal = true;
     },
@@ -429,16 +431,24 @@ document.addEventListener('alpine:init', () => {
 
     async addStatus() {
       try {
+        const name = sanitizeInput(this.newStatus.name, 50).toLowerCase().replace(/\s+/g, '_');
+        const label = sanitizeInput(this.newStatus.label, 100);
+
+        if (!name || !label) {
+          this.showAlert('error', 'Name and label are required');
+          return;
+        }
+
         const { error } = await supabase.from('task_statuses').insert({
-          name: this.newStatus.name.trim().toLowerCase().replace(/\s+/g, '_'),
-          label: this.newStatus.label.trim(),
+          name,
+          label,
           color: this.newStatus.color,
           sort_order: parseInt(this.newStatus.sort_order)
         });
 
         if (error) throw error;
 
-        this.showAlert('success', `Status "${this.newStatus.label}" created successfully`);
+        this.showAlert('success', `Status "${label}" created successfully`);
         this.newStatus = { name: '', label: '', color: '#6b7280', sort_order: 1 };
         this.showAddStatusModal = false;
         await this.loadData();
@@ -454,11 +464,19 @@ document.addEventListener('alpine:init', () => {
 
     async saveStatus() {
       try {
+        const name = sanitizeInput(this.editingStatus.name, 50).toLowerCase().replace(/\s+/g, '_');
+        const label = sanitizeInput(this.editingStatus.label, 100);
+
+        if (!name || !label) {
+          this.showAlert('error', 'Name and label are required');
+          return;
+        }
+
         const { error } = await supabase
           .from('task_statuses')
           .update({
-            name: this.editingStatus.name.trim().toLowerCase().replace(/\s+/g, '_'),
-            label: this.editingStatus.label.trim(),
+            name,
+            label,
             color: this.editingStatus.color,
             sort_order: parseInt(this.editingStatus.sort_order)
           })
@@ -466,7 +484,7 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
-        this.showAlert('success', `Status "${this.editingStatus.label}" updated successfully`);
+        this.showAlert('success', `Status "${label}" updated successfully`);
         this.showEditStatusModal = false;
         this.editingStatus = null;
         await this.loadData();
@@ -482,7 +500,6 @@ document.addEventListener('alpine:init', () => {
     },
 
     getTaskCountForStatus(statusId) {
-      // This would need progress data - for now return 0
       return 0;
     }
   }));

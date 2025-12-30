@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>Task Tracking | PayTabs Onboarding</title>
+  <title>Task Tracking | Onboarding</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -23,14 +23,11 @@
 </head>
 <body>
   <div class="app-layout" x-data="tracking()" x-cloak>
-    <!-- Main Content -->
     <main class="main-content">
-      <!-- Content Header -->
       <div class="content-header">
         <h1 class="content-title">Task Tracking</h1>
       </div>
 
-      <!-- Summary Stats -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon total">
@@ -81,7 +78,6 @@
         </div>
       </div>
 
-      <!-- Filters -->
       <div class="filters-section">
         <div class="filter-group">
           <label class="filter-label">Trainee</label>
@@ -118,7 +114,6 @@
         </button>
       </div>
 
-      <!-- Tasks Table -->
       <div class="tasks-table-container">
         <table class="tasks-table">
           <thead>
@@ -189,7 +184,6 @@
           </tbody>
         </table>
 
-        <!-- Empty State -->
         <div class="empty-state" x-show="getFilteredTasks().length === 0">
           <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -199,7 +193,6 @@
       </div>
     </main>
 
-    <!-- Edit Task Progress Modal -->
     <div class="modal-overlay" x-show="showEditModal" x-cloak @click.self="showEditModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -213,7 +206,6 @@
 
         <template x-if="editingItem">
           <div>
-            <!-- Task Info -->
             <div class="form-info">
               <div class="form-info-row">
                 <span class="form-info-label">Trainee</span>
@@ -229,7 +221,6 @@
               </div>
             </div>
 
-            <!-- Status Selection -->
             <div class="form-group">
               <label class="form-label">Status</label>
               <div class="status-select">
@@ -243,7 +234,6 @@
               </div>
             </div>
 
-            <!-- Score Section (only for exercise/project categories) -->
             <div class="score-section" x-show="isScorableCategory(editingItem.task.category_id)">
               <div class="score-section-title">Score (1-10)</div>
               <div class="score-input">
@@ -252,14 +242,12 @@
               </div>
             </div>
 
-            <!-- Duration -->
             <div class="form-group">
               <label class="form-label">Duration (minutes)</label>
               <input type="number" class="form-input" x-model="editForm.duration_minutes" min="1" placeholder="e.g., 90 for 1h 30m">
               <p class="form-help" x-show="editForm.duration_minutes" x-text="'= ' + Math.floor(editForm.duration_minutes / 60) + 'h ' + (editForm.duration_minutes % 60) + 'm'"></p>
             </div>
 
-            <!-- Planned Dates -->
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Start Date</label>

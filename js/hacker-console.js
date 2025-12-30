@@ -1,21 +1,67 @@
-// Hacker Console - Pure Vanilla JS (no Alpine dependency)
-// Intercepts fetch AND WebSocket for Supabase requests
+function escapeHtml(str) {
+  if (str == null) return '';
+  if (typeof str !== 'string') str = String(str);
+  const htmlEscapes = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+  };
+  return str.replace(/[&<>"'`=/]/g, char => htmlEscapes[char]);
+}
 
-// State
 const state = {
   logs: [],
   logId: 0,
   filter: ''
 };
 
-// Add log entry and update UI
 function addLog(log) {
   state.logs.unshift({ ...log, id: ++state.logId });
   if (state.logs.length > 100) state.logs.pop();
   renderLogs();
 }
 
-// Render logs to console
+function createLogEntry(log) {
+  const methodClass = log.method.toLowerCase().replace('←', '').replace('→', '');
+
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${methodClass}`;
+
+  const time = document.createElement('span');
+  time.className = 'log-time';
+  time.textContent = log.time;
+
+  const method = document.createElement('span');
+  method.className = `log-method ${methodClass}`;
+  method.textContent = log.method;
+
+  const endpoint = document.createElement('span');
+  endpoint.className = 'log-endpoint';
+  endpoint.title = log.endpoint;
+  endpoint.textContent = log.endpoint;
+
+  const status = document.createElement('span');
+  status.className = `log-status ${log.ok ? 'success' : 'error'}`;
+  status.textContent = log.status;
+
+  const duration = document.createElement('span');
+  duration.className = 'log-duration';
+  duration.textContent = `${log.duration}ms`;
+
+  entry.appendChild(time);
+  entry.appendChild(method);
+  entry.appendChild(endpoint);
+  entry.appendChild(status);
+  entry.appendChild(duration);
+
+  return entry;
+}
+
 function renderLogs() {
   const body = document.getElementById('hacker-log-body');
   if (!body) return;
@@ -26,17 +72,8 @@ function renderLogs() {
         l.method.toLowerCase().includes(state.filter))
     : state.logs;
 
-  body.innerHTML = filtered.map(log => `
-    <div class="log-entry log-${log.method.toLowerCase().replace('←', '').replace('→', '')}">
-      <span class="log-time">${log.time}</span>
-      <span class="log-method ${log.method.toLowerCase()}">${log.method}</span>
-      <span class="log-endpoint" title="${log.endpoint}">${log.endpoint}</span>
-      <span class="log-status ${log.ok ? 'success' : 'error'}">${log.status}</span>
-      <span class="log-duration">${log.duration}ms</span>
-    </div>
-  `).join('');
+  body.replaceChildren(...filtered.map(createLogEntry));
 
-  // Update stats
   const reqCount = document.getElementById('hacker-req-count');
   const okCount = document.getElementById('hacker-ok-count');
   const errCount = document.getElementById('hacker-err-count');
@@ -44,11 +81,9 @@ function renderLogs() {
   if (okCount) okCount.textContent = state.logs.filter(l => l.ok).length;
   if (errCount) errCount.textContent = state.logs.filter(l => !l.ok).length;
 
-  // Scroll to top (use rAF to avoid forced layout)
   requestAnimationFrame(() => { body.scrollTop = 0; });
 }
 
-// Intercept Fetch requests
 if (!window._fetchIntercepted) {
   window._fetchIntercepted = true;
   const originalFetch = window.fetch.bind(window);
@@ -88,7 +123,6 @@ if (!window._fetchIntercepted) {
   };
 }
 
-// Intercept WebSocket connections
 if (!window._wsIntercepted) {
   window._wsIntercepted = true;
   const OriginalWebSocket = window.WebSocket;
@@ -175,40 +209,75 @@ if (!window._wsIntercepted) {
   window.WebSocket.prototype = OriginalWebSocket.prototype;
 }
 
-// Create console HTML
 function createConsole() {
   if (document.querySelector('.hacker-console')) return;
 
   const consoleEl = document.createElement('div');
   consoleEl.className = 'hacker-console';
-  consoleEl.innerHTML = `
-    <div class="console-header">
-      <div class="console-title">SUPABASE NETWORK</div>
-      <div class="console-stats">
-        <div class="console-stat">REQ: <span class="console-stat-value" id="hacker-req-count">0</span></div>
-        <div class="console-stat">OK: <span class="console-stat-value" id="hacker-ok-count">0</span></div>
-        <div class="console-stat">ERR: <span class="console-stat-value" id="hacker-err-count">0</span></div>
-      </div>
-    </div>
-    <div class="console-body" id="hacker-log-body"></div>
-    <div class="console-input">
-      <span class="console-prompt">root@supabase:~$</span>
-      <input type="text" class="console-input-field" id="hacker-filter" placeholder="filter logs...">
-    </div>
-  `;
+
+  const header = document.createElement('div');
+  header.className = 'console-header';
+
+  const title = document.createElement('div');
+  title.className = 'console-title';
+  title.textContent = 'SUPABASE NETWORK';
+
+  const stats = document.createElement('div');
+  stats.className = 'console-stats';
+
+  const createStat = (label, id) => {
+    const stat = document.createElement('div');
+    stat.className = 'console-stat';
+    stat.textContent = `${label}: `;
+    const value = document.createElement('span');
+    value.className = 'console-stat-value';
+    value.id = id;
+    value.textContent = '0';
+    stat.appendChild(value);
+    return stat;
+  };
+
+  stats.appendChild(createStat('REQ', 'hacker-req-count'));
+  stats.appendChild(createStat('OK', 'hacker-ok-count'));
+  stats.appendChild(createStat('ERR', 'hacker-err-count'));
+
+  header.appendChild(title);
+  header.appendChild(stats);
+
+  const body = document.createElement('div');
+  body.className = 'console-body';
+  body.id = 'hacker-log-body';
+
+  const inputWrapper = document.createElement('div');
+  inputWrapper.className = 'console-input';
+
+  const prompt = document.createElement('span');
+  prompt.className = 'console-prompt';
+  prompt.textContent = 'root@supabase:~$';
+
+  const filterInput = document.createElement('input');
+  filterInput.type = 'text';
+  filterInput.className = 'console-input-field';
+  filterInput.id = 'hacker-filter';
+  filterInput.placeholder = 'filter logs...';
+
+  inputWrapper.appendChild(prompt);
+  inputWrapper.appendChild(filterInput);
+
+  consoleEl.appendChild(header);
+  consoleEl.appendChild(body);
+  consoleEl.appendChild(inputWrapper);
+
   document.body.appendChild(consoleEl);
 
-  // Filter input handler
-  document.getElementById('hacker-filter').addEventListener('input', (e) => {
+  filterInput.addEventListener('input', (e) => {
     state.filter = e.target.value.toLowerCase();
     renderLogs();
   });
 
-  // Initial render
   renderLogs();
 }
 
-// Initialize when DOM is ready
 if (document.body) {
   createConsole();
 } else {

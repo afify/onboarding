@@ -1,12 +1,14 @@
-import { supabase, getSession } from './supabase-client.js';
+import { supabase } from './supabase-client.js';
+import { isValidEmail, isValidName, sanitizeInput } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('traineesPage', () => ({
-    trainees: [],
-    mentors: [],
-    tasks: [],
-    progress: [],
-    weeks: [],
+    get trainees() { return Alpine.store('app').trainees; },
+    get mentors() { return Alpine.store('app').mentors; },
+    get tasks() { return Alpine.store('app').tasks; },
+    get progress() { return Alpine.store('app').progress; },
+    get weeks() { return Alpine.store('app').weeks; },
+
     showAddModal: false,
     showEditModal: false,
     showDeleteModal: false,
@@ -20,30 +22,22 @@ document.addEventListener('alpine:init', () => {
     deleteTarget: null,
 
     async init() {
-      const session = await getSession();
-      if (!session) {
+      const store = Alpine.store('app');
+
+      await store.initAuth();
+
+      if (!store.session) {
         window.location.href = '/';
         return;
       }
 
-      await this.loadData();
+      await store.loadData();
+
       this.subscribeToChanges();
     },
 
     async loadData() {
-      const [traineesRes, mentorsRes, tasksRes, progressRes, weeksRes] = await Promise.all([
-        supabase.from('trainees').select('*').order('created_at', { ascending: false }),
-        supabase.from('mentors').select('*'),
-        supabase.from('tasks').select('*'),
-        supabase.from('progress').select('*'),
-        supabase.from('weeks').select('*').order('week_number')
-      ]);
-
-      this.trainees = traineesRes.data || [];
-      this.mentors = mentorsRes.data || [];
-      this.tasks = tasksRes.data || [];
-      this.progress = progressRes.data || [];
-      this.weeks = weeksRes.data || [];
+      await Alpine.store('app').loadData(true);
     },
 
     subscribeToChanges() {
@@ -93,11 +87,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async addTrainee() {
-      if (!this.newTrainee.name.trim()) return;
+      const name = sanitizeInput(this.newTrainee.name, 100);
+      const email = this.newTrainee.email ? sanitizeInput(this.newTrainee.email, 254) : null;
+
+      if (!isValidName(name)) return;
+      if (email && !isValidEmail(email)) return;
 
       const { error } = await supabase.from('trainees').insert({
-        name: this.newTrainee.name.trim(),
-        email: this.newTrainee.email.trim() || null,
+        name,
+        email,
         assigned_mentor_id: this.newTrainee.assigned_mentor_id || null,
         start_date: this.newTrainee.start_date
       });
@@ -113,20 +111,23 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // Edit Trainee
     editTrainee(trainee) {
       this.editingTrainee = { ...trainee };
       this.showEditModal = true;
     },
 
     async saveTrainee() {
-      if (!this.editingTrainee.name.trim()) return;
+      const name = sanitizeInput(this.editingTrainee.name, 100);
+      const email = this.editingTrainee.email ? sanitizeInput(this.editingTrainee.email, 254) : null;
+
+      if (!isValidName(name)) return;
+      if (email && !isValidEmail(email)) return;
 
       const { error } = await supabase
         .from('trainees')
         .update({
-          name: this.editingTrainee.name.trim(),
-          email: this.editingTrainee.email?.trim() || null,
+          name,
+          email,
           assigned_mentor_id: this.editingTrainee.assigned_mentor_id || null,
           start_date: this.editingTrainee.start_date
         })
@@ -138,7 +139,6 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // Delete Trainee
     confirmDelete(trainee) {
       this.deleteTarget = trainee;
       this.showDeleteModal = true;

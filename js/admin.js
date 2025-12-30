@@ -1,13 +1,13 @@
-import { supabase, getSession, getCurrentUser, getMentorProfile, isAdmin } from './supabase-client.js';
+import { supabase } from './supabase-client.js';
+import { isValidEmail, isValidName, validatePassword, sanitizeInput } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('adminPanel', () => ({
-    // State
-    mentors: [],
-    trainees: [],
+    get mentors() { return Alpine.store('app').mentors; },
+    get trainees() { return Alpine.store('app').trainees; },
+
     activeTab: 'mentors',
 
-    // Modal states
     showAddMentorModal: false,
     showEditMentorModal: false,
     showAddTraineeModal: false,
@@ -18,7 +18,6 @@ document.addEventListener('alpine:init', () => {
     deleteType: null,
     alert: { show: false, type: '', message: '' },
 
-    // Form data
     newMentor: { name: '', email: '', password: '', role: 'mentor' },
     editingMentor: null,
     newTrainee: {
@@ -30,28 +29,25 @@ document.addEventListener('alpine:init', () => {
     editingTrainee: null,
 
     async init() {
-      // Check admin access
-      const session = await getSession();
-      if (!session) {
+      const store = Alpine.store('app');
+
+      await store.initAuth();
+
+      if (!store.session) {
         window.location.href = '/';
         return;
       }
 
-      const isAdminUser = await isAdmin();
-      if (!isAdminUser) {
+      await store.loadData();
+
+      if (!store.isAdmin) {
         window.location.href = '/dashboard.html';
         return;
       }
-
-      await this.loadData();
     },
 
     async loadData() {
-      const { data: mentors } = await supabase.from('mentors').select('*').order('created_at');
-      this.mentors = mentors || [];
-
-      const { data: trainees } = await supabase.from('trainees').select('*').order('created_at');
-      this.trainees = trainees || [];
+      await Alpine.store('app').loadData(true);
     },
 
     showAlert(type, message) {
@@ -78,40 +74,54 @@ document.addEventListener('alpine:init', () => {
 
     async addMentor() {
       try {
-        // Create auth user
+        const name = sanitizeInput(this.newMentor.name, 100);
+        const email = sanitizeInput(this.newMentor.email, 254);
+        const password = this.newMentor.password;
+
+        if (!isValidName(name)) {
+          this.showAlert('error', 'Invalid name format');
+          return;
+        }
+        if (!isValidEmail(email)) {
+          this.showAlert('error', 'Invalid email format');
+          return;
+        }
+        const pwCheck = validatePassword(password);
+        if (!pwCheck.valid) {
+          this.showAlert('error', pwCheck.message);
+          return;
+        }
+
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: this.newMentor.email,
-          password: this.newMentor.password,
+          email,
+          password,
           email_confirm: true
         });
 
         if (authError) {
-          // Try signup instead for non-admin
           const { data: signupData, error: signupError } = await supabase.auth.signUp({
-            email: this.newMentor.email,
-            password: this.newMentor.password
+            email,
+            password
           });
 
           if (signupError) throw signupError;
 
-          // Insert into mentors table
           await supabase.from('mentors').insert({
             id: signupData.user.id,
-            email: this.newMentor.email,
-            name: this.newMentor.name,
+            email,
+            name,
             role: this.newMentor.role
           });
         } else {
-          // Insert into mentors table
           await supabase.from('mentors').insert({
             id: authData.user.id,
-            email: this.newMentor.email,
-            name: this.newMentor.name,
+            email,
+            name,
             role: this.newMentor.role
           });
         }
 
-        this.showAlert('success', `Mentor "${this.newMentor.name}" created successfully`);
+        this.showAlert('success', `Mentor "${name}" created successfully`);
         this.newMentor = { name: '', email: '', password: '', role: 'mentor' };
         this.showAddMentorModal = false;
         await this.loadData();
@@ -122,14 +132,26 @@ document.addEventListener('alpine:init', () => {
 
     async addTrainee() {
       try {
+        const name = sanitizeInput(this.newTrainee.name, 100);
+        const email = this.newTrainee.email ? sanitizeInput(this.newTrainee.email, 254) : null;
+
+        if (!isValidName(name)) {
+          this.showAlert('error', 'Invalid name format');
+          return;
+        }
+        if (email && !isValidEmail(email)) {
+          this.showAlert('error', 'Invalid email format');
+          return;
+        }
+
         await supabase.from('trainees').insert({
-          name: this.newTrainee.name,
-          email: this.newTrainee.email || null,
+          name,
+          email,
           assigned_mentor_id: this.newTrainee.assigned_mentor_id || null,
           start_date: this.newTrainee.start_date
         });
 
-        this.showAlert('success', `Trainee "${this.newTrainee.name}" added successfully`);
+        this.showAlert('success', `Trainee "${name}" added successfully`);
         this.newTrainee = {
           name: '',
           email: '',
@@ -143,7 +165,6 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // Edit Mentor
     editMentor(mentor) {
       this.editingMentor = { ...mentor };
       this.showEditMentorModal = true;
@@ -170,7 +191,6 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // Edit Trainee
     editTrainee(trainee) {
       this.editingTrainee = { ...trainee };
       this.showEditTraineeModal = true;

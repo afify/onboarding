@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>PayTabs Onboarding Tracker</title>
+  <title>Onboarding Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -18,24 +18,20 @@
   <script type="module" src="/js/app-login.js"></script>
 </head>
 <body class="login-page">
-  <!-- Background effects -->
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
   <div class="grid-overlay"></div>
 
-  <!-- Login Card -->
   <div class="login-card" x-data="{ email: '', password: '', loading: false, error: null }">
-    <!-- Brand -->
     <div class="brand">
       <div class="brand-logo">
-        <div class="brand-icon">PT</div>
-        <span class="brand-name">PayTabs</span>
+<div class="brand-icon" id="brand-icon">OT</div>
+        <span class="brand-name" id="brand-name">Company</span>
       </div>
       <p class="brand-tagline">Onboarding Tracker</p>
     </div>
 
-    <!-- Error Message -->
     <div class="error-message" x-show="error" x-cloak x-transition>
       <svg class="error-icon" fill="none" stroke="#ef4444" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -43,7 +39,6 @@
       <span class="error-text" x-text="error"></span>
     </div>
 
-    <!-- Login Form -->
     <form id="loginForm">
       <div class="form-group">
         <label class="form-label" for="login-email">Email Address</label>
@@ -51,7 +46,7 @@
           type="email"
           id="login-email"
           class="form-input"
-          placeholder="name@paytabs.com"
+          placeholder="name@company.com"
           x-model="email"
           required
           :disabled="loading"
@@ -77,7 +72,6 @@
       </button>
     </form>
 
-    <!-- Footer -->
     <div class="login-footer">
       Mentor Access Only &middot; <span>v1.0</span>
     </div>

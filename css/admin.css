@@ -1,9 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   ADMIN PAGE - PayTabs Onboarding Tracker
-   Admin panel specific styles
-   ═══════════════════════════════════════════════════════════ */
-
-/* Admin Header */
 .admin-header {
   display: flex;
   align-items: center;
@@ -36,7 +30,6 @@
   letter-spacing: 0.05em;
 }
 
-/* Stats Grid Override */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -44,7 +37,6 @@
   margin-bottom: 2rem;
 }
 
-/* Admin stat card override - vertical layout */
 .admin-main .stat-card {
   padding: 1.5rem;
   flex-direction: column;
@@ -68,7 +60,6 @@
   margin-bottom: 0.25rem;
 }
 
-/* Section */
 .section {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -88,7 +79,6 @@
   font-weight: 600;
 }
 
-/* Add Button */
 .btn-add {
   display: flex;
   align-items: center;
@@ -110,7 +100,6 @@
   box-shadow: var(--shadow-cyan);
 }
 
-/* Admin Table overrides */
 .admin-main .data-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -133,7 +122,6 @@
   background: var(--glass-bg);
 }
 
-/* User Cell */
 .user-cell {
   display: flex;
   align-items: center;
@@ -166,13 +154,11 @@
   color: var(--text-muted);
 }
 
-/* Admin-specific btn-icon override */
 .admin-main .btn-icon {
   width: 32px;
   height: 32px;
 }
 
-/* Trainee Select List */
 .trainee-select-list {
   max-height: 300px;
   overflow-y: auto;

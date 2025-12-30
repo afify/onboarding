@@ -1,6 +1,3 @@
-// Sidebar Navigation Component (ES Module)
-import { isAdmin } from './supabase-client.js';
-
 const currentPath = window.location.pathname;
 
 const isActive = (path) => {
@@ -9,7 +6,7 @@ const isActive = (path) => {
 };
 
 const sidebarHTML = `
-  <aside class="sidebar-left" x-data="sidebarData()" x-init="checkAdmin()">
+  <aside class="sidebar-left" x-data="sidebarData()">
     <div class="sidebar-section-title">Navigation</div>
     <div class="nav-menu">
       <a href="/dashboard.html" class="nav-item ${isActive('/dashboard.html') ? 'active' : ''}">
@@ -47,13 +44,11 @@ const sidebarHTML = `
   </aside>
 `;
 
-// Inject sidebar when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const layout = document.querySelector('.app-layout, .admin-layout, .reports-layout');
   if (layout) {
     layout.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Move page-specific sidebar content into the sidebar
     const extraContent = document.querySelector('[data-sidebar-content]');
     const sidebarExtra = document.getElementById('sidebar-extra');
     if (extraContent && sidebarExtra) {
@@ -63,17 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Register Alpine component for sidebar
 document.addEventListener('alpine:init', () => {
   Alpine.data('sidebarData', () => ({
-    isAdminUser: false,
-
-    async checkAdmin() {
-      try {
-        this.isAdminUser = await isAdmin();
-      } catch (e) {
-        console.error('isAdmin error:', e);
-      }
+    get isAdminUser() {
+      return Alpine.store('app').isAdmin;
     }
   }));
 });

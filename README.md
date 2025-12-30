@@ -1,6 +1,6 @@
-# PayTabs Onboarding Tracker
+# Onboarding Tracker
 
-A web application for tracking trainee onboarding progress at PayTabs.
+A web application for tracking trainee onboarding progress.
 
 ## Features
 

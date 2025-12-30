@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>Dashboard | PayTabs Onboarding</title>
+  <title>Dashboard | Onboarding</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -23,9 +23,7 @@
 </head>
 <body>
   <div class="app-layout" x-data="dashboard()" x-cloak>
-    <!-- Main Content -->
     <main class="main-content">
-      <!-- Analytics Cards -->
       <div class="analytics-grid">
         <div class="analytics-card">
           <div class="analytics-icon analytics-icon-trainees">
@@ -90,7 +88,6 @@
         </div>
       </div>
 
-      <!-- Status Distribution -->
       <div class="status-distribution">
         <div class="status-bar">
           <div class="status-segment status-done" :style="'width: ' + getStatusPercent('done') + '%'" :title="'Done: ' + getStatusPercent('done') + '%'"></div>
@@ -106,7 +103,6 @@
         </div>
       </div>
 
-      <!-- Content Header -->
       <div class="content-header">
         <h1 class="content-title">Trainees</h1>
         <button class="add-trainee-btn" @click="showAddModal = true">
@@ -117,11 +113,9 @@
         </button>
       </div>
 
-      <!-- Trainee Grid -->
       <div class="trainee-grid">
         <template x-for="trainee in trainees" :key="trainee.id">
           <div class="trainee-card" :class="{ 'expanded': expandedTrainee === trainee.id }" @click="expandedTrainee !== trainee.id && (expandedTrainee = trainee.id)">
-            <!-- Trainee Header -->
             <div class="trainee-header">
               <div>
                 <div class="trainee-avatar" x-text="getInitials(trainee.name)"></div>
@@ -131,7 +125,6 @@
               <div class="trainee-week-badge" x-text="'Week ' + getCurrentWeek(trainee.id)"></div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="trainee-progress">
               <div class="progress-header">
                 <span class="progress-label">Progress</span>
@@ -142,9 +135,7 @@
               </div>
             </div>
 
-            <!-- Expanded View -->
             <div class="trainee-expanded" x-show="expandedTrainee === trainee.id" x-cloak>
-              <!-- Tasks Section -->
               <div class="tasks-header">
                 <h3 class="tasks-title">Tasks</h3>
                 <button class="collapse-btn" @click.stop="expandedTrainee = null">
@@ -172,7 +163,6 @@
                 </template>
               </div>
 
-              <!-- Reset All Progress Button -->
               <button class="reset-all-btn" @click.stop="confirmResetAllProgress(trainee)" x-show="progress.filter(p => p.trainee_id === trainee.id).length > 0">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -180,7 +170,6 @@
                 Reset All Progress
               </button>
 
-              <!-- Notes Section -->
               <div class="notes-section">
                 <h3 class="notes-title">Notes</h3>
                 <div class="notes-list">
@@ -219,7 +208,6 @@
           </div>
         </template>
 
-        <!-- Empty State -->
         <div class="empty-state" x-show="trainees.length === 0">
           <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -229,7 +217,6 @@
       </div>
     </main>
 
-    <!-- Add Trainee Modal -->
     <div class="modal-overlay" x-show="showAddModal" x-cloak @click.self="showAddModal = false">
       <div class="modal-content">
         <div class="modal-header">
@@ -270,7 +257,6 @@
       </div>
     </div>
 
-    <!-- Edit Note Modal -->
     <div class="modal-overlay" x-show="showEditNoteModal" x-cloak @click.self="showEditNoteModal = false">
       <div class="modal-content">
         <div class="modal-header">
@@ -294,7 +280,6 @@
       </div>
     </div>
 
-    <!-- Delete Note Confirmation Modal -->
     <div class="modal-overlay" x-show="showDeleteNoteModal" x-cloak @click.self="showDeleteNoteModal = false">
       <div class="modal-content">
         <div class="modal-header">
@@ -313,7 +298,6 @@
       </div>
     </div>
 
-    <!-- Reset All Progress Confirmation Modal -->
     <div class="modal-overlay" x-show="showResetProgressModal" x-cloak @click.self="showResetProgressModal = false">
       <div class="modal-content">
         <div class="modal-header">

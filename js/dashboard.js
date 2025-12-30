@@ -1,16 +1,17 @@
-import { supabase, getSession, getCurrentUser, getMentorProfile, signOut } from './supabase-client.js';
+import { supabase } from './supabase-client.js';
+import { isValidEmail, isValidName, sanitizeInput } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('dashboard', () => ({
-    // State
-    currentMentor: null,
-    weeks: [],
-    tasks: [],
-    trainees: [],
-    mentors: [],
-    progress: [],
+    get currentMentor() { return Alpine.store('app').mentor; },
+    get weeks() { return Alpine.store('app').weeks; },
+    get tasks() { return Alpine.store('app').tasks; },
+    get trainees() { return Alpine.store('app').trainees; },
+    get mentors() { return Alpine.store('app').mentors; },
+    get progress() { return Alpine.store('app').progress; },
+    get activities() { return Alpine.store('app').activityLog; },
+
     notes: [],
-    activities: [],
     selectedWeek: 1,
     expandedTrainee: null,
     showAddModal: false,
@@ -26,110 +27,60 @@ document.addEventListener('alpine:init', () => {
       start_date: new Date().toISOString().split('T')[0]
     },
 
-    // Initialize
     async init() {
-      // Check authentication
-      const session = await getSession();
-      if (!session) {
+      const store = Alpine.store('app');
+
+      await store.initAuth();
+
+      if (!store.session) {
         window.location.href = '/';
         return;
       }
 
-      const user = await getCurrentUser();
-      const { data: mentor } = await getMentorProfile(user.id);
+      await store.loadData();
 
-      if (!mentor) {
+      if (!store.mentor) {
         window.location.href = '/';
         return;
       }
 
-      this.currentMentor = mentor;
+      await this.loadNotes();
 
-      // Load data
-      await this.loadData();
-
-      // Subscribe to realtime updates
       this.subscribeToRealtime();
     },
 
-    async loadData() {
-      // Load weeks
-      const { data: weeks } = await supabase
-        .from('weeks')
-        .select('*')
-        .order('week_number');
-      this.weeks = weeks || [];
-
-      // Load tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('order_index');
-      this.tasks = tasks || [];
-
-      // Load trainees
-      const { data: trainees } = await supabase
-        .from('trainees')
-        .select('*')
-        .order('created_at');
-      this.trainees = trainees || [];
-
-      // Load mentors
-      const { data: mentors } = await supabase
-        .from('mentors')
-        .select('*');
-      this.mentors = mentors || [];
-
-      // Load progress
-      const { data: progress } = await supabase
-        .from('progress')
-        .select('*');
-      this.progress = progress || [];
-
-      // Load notes
+    async loadNotes() {
       const { data: notes } = await supabase
         .from('notes')
         .select('*')
         .order('created_at', { ascending: false });
       this.notes = notes || [];
+    },
 
-      // Load recent activity
-      const { data: activities } = await supabase
-        .from('activity_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-      this.activities = activities || [];
+    async loadData() {
+      await Alpine.store('app').loadData(true);
+      await this.loadNotes();
     },
 
     subscribeToRealtime() {
-      // Subscribe to progress changes
+      const store = Alpine.store('app');
+
       supabase
-        .channel('progress-changes')
+        .channel('dashboard-progress-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'progress' }, (payload) => {
           this.handleProgressChange(payload);
         })
         .subscribe();
 
-      // Subscribe to activity log
       supabase
-        .channel('activity-changes')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_log' }, (payload) => {
-          this.activities.unshift(payload.new);
-        })
-        .subscribe();
-
-      // Subscribe to notes
-      supabase
-        .channel('notes-changes')
+        .channel('dashboard-notes-changes')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notes' }, (payload) => {
           this.notes.unshift(payload.new);
         })
         .subscribe();
 
-      // Subscribe to trainees
       supabase
-        .channel('trainees-changes')
+        .channel('dashboard-trainees-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'trainees' }, () => {
           this.loadData();
         })
@@ -137,19 +88,19 @@ document.addEventListener('alpine:init', () => {
     },
 
     handleProgressChange(payload) {
+      const store = Alpine.store('app');
       if (payload.eventType === 'INSERT') {
-        this.progress.push(payload.new);
+        store.progress.push(payload.new);
       } else if (payload.eventType === 'UPDATE') {
-        const idx = this.progress.findIndex(p => p.id === payload.new.id);
+        const idx = store.progress.findIndex(p => p.id === payload.new.id);
         if (idx !== -1) {
-          this.progress[idx] = payload.new;
+          store.progress[idx] = payload.new;
         }
       } else if (payload.eventType === 'DELETE') {
-        this.progress = this.progress.filter(p => p.id !== payload.old.id);
+        store.progress = store.progress.filter(p => p.id !== payload.old.id);
       }
     },
 
-    // Helpers
     getInitials(name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     },
@@ -193,7 +144,6 @@ document.addEventListener('alpine:init', () => {
     },
 
     getCurrentWeek(traineeId) {
-      // Calculate based on progress
       const traineeProgress = this.progress.filter(p => p.trainee_id === traineeId && p.status === 'done');
       const completedTaskIds = traineeProgress.map(p => p.task_id);
 
@@ -215,7 +165,6 @@ document.addEventListener('alpine:init', () => {
       return Math.round((doneTasks / totalTasks) * 100);
     },
 
-    // Analytics helpers
     getAverageProgress() {
       if (this.trainees.length === 0) return 0;
       const total = this.trainees.reduce((sum, t) => sum + this.getTraineeProgress(t.id), 0);
@@ -240,7 +189,6 @@ document.addEventListener('alpine:init', () => {
 
       let count;
       if (status === 'pending') {
-        // Pending = total possible - all tracked progress entries
         const tracked = this.progress.length;
         count = total - tracked + this.progress.filter(p => p.status === 'pending').length;
       } else {
@@ -278,7 +226,6 @@ document.addEventListener('alpine:init', () => {
           });
       }
 
-      // Optimistic update
       if (existingProgress) {
         existingProgress.status = newStatus;
       } else {
@@ -293,45 +240,44 @@ document.addEventListener('alpine:init', () => {
     },
 
     async addNote(traineeId) {
-      if (!this.newNote.trim()) return;
+      const content = sanitizeInput(this.newNote, 2000);
+      if (!content) return;
 
       await supabase
         .from('notes')
         .insert({
           trainee_id: traineeId,
           mentor_id: this.currentMentor.id,
-          content: this.newNote.trim()
+          content
         });
 
       this.newNote = '';
     },
 
-    // Edit Note
     editNote(note) {
       this.editingNote = { ...note };
       this.showEditNoteModal = true;
     },
 
     async saveNote() {
-      if (!this.editingNote.content.trim()) return;
+      const content = sanitizeInput(this.editingNote.content, 2000);
+      if (!content) return;
 
       const { error } = await supabase
         .from('notes')
-        .update({ content: this.editingNote.content.trim() })
+        .update({ content })
         .eq('id', this.editingNote.id);
 
       if (!error) {
-        // Update local state
         const idx = this.notes.findIndex(n => n.id === this.editingNote.id);
         if (idx !== -1) {
-          this.notes[idx].content = this.editingNote.content.trim();
+          this.notes[idx].content = content;
         }
         this.showEditNoteModal = false;
         this.editingNote = { id: null, content: '' };
       }
     },
 
-    // Delete Note
     confirmDeleteNote(note) {
       this.deleteNoteTarget = note;
       this.showDeleteNoteModal = true;
@@ -346,14 +292,12 @@ document.addEventListener('alpine:init', () => {
         .eq('id', this.deleteNoteTarget.id);
 
       if (!error) {
-        // Update local state
         this.notes = this.notes.filter(n => n.id !== this.deleteNoteTarget.id);
         this.showDeleteNoteModal = false;
         this.deleteNoteTarget = null;
       }
     },
 
-    // Reset Progress
     showResetProgressModal: false,
     resetProgressTarget: null,
 
@@ -393,18 +337,21 @@ document.addEventListener('alpine:init', () => {
     },
 
     async addTrainee() {
-      if (!this.newTrainee.name.trim()) return;
+      const name = sanitizeInput(this.newTrainee.name, 100);
+      const email = this.newTrainee.email ? sanitizeInput(this.newTrainee.email, 254) : null;
+
+      if (!isValidName(name)) return;
+      if (email && !isValidEmail(email)) return;
 
       await supabase
         .from('trainees')
         .insert({
-          name: this.newTrainee.name.trim(),
-          email: this.newTrainee.email.trim() || null,
+          name,
+          email,
           assigned_mentor_id: this.newTrainee.assigned_mentor_id || null,
           start_date: this.newTrainee.start_date
         });
 
-      // Reset form
       this.newTrainee = {
         name: '',
         email: '',
