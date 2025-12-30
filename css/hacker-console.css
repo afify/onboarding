@@ -1,0 +1,194 @@
+/* Hacker Console - Reserve space at bottom of page */
+body {
+  padding-bottom: 200px !important;
+}
+
+.hacker-console {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 200px;
+  background: rgba(0, 0, 0, 0.95);
+  border-top: 1px solid #0f0;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.1), inset 0 0 60px rgba(0, 255, 0, 0.02);
+}
+
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.1), transparent);
+  border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.console-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #0f0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.console-title::before {
+  content: '>';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.console-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.6rem;
+  color: rgba(0, 255, 0, 0.6);
+}
+
+.console-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.console-stat-value {
+  color: #0f0;
+  font-weight: bold;
+}
+
+.console-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.03) 2px,
+      rgba(0, 255, 0, 0.03) 4px
+    );
+}
+
+.console-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.console-body::-webkit-scrollbar-track {
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.console-body::-webkit-scrollbar-thumb {
+  background: #0f0;
+}
+
+.log-entry {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  border-left: 2px solid transparent;
+  margin-bottom: 2px;
+  animation: logSlide 0.2s ease;
+}
+
+@keyframes logSlide {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.log-entry:hover {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.log-entry.log-get { border-left-color: #00ff88; }
+.log-entry.log-post { border-left-color: #ffff00; }
+.log-entry.log-patch { border-left-color: #ff8800; }
+.log-entry.log-delete { border-left-color: #ff0044; }
+.log-entry.log-ws { border-left-color: #00ffff; }
+.log-entry.log-ws→ { border-left-color: #ff00ff; }
+.log-entry.log-←ws { border-left-color: #00ffff; }
+
+.log-time {
+  color: rgba(0, 255, 0, 0.4);
+  min-width: 65px;
+}
+
+.log-method {
+  min-width: 50px;
+  font-weight: bold;
+}
+
+.log-method.get { color: #00ff88; }
+.log-method.post { color: #ffff00; }
+.log-method.patch { color: #ff8800; }
+.log-method.delete { color: #ff0044; }
+.log-method.ws { color: #00ffff; }
+.log-method.ws→ { color: #ff00ff; }
+.log-method.←ws { color: #00ffff; }
+
+.log-endpoint {
+  color: rgba(0, 255, 0, 0.8);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-status {
+  min-width: 35px;
+  text-align: right;
+}
+
+.log-status.success { color: #00ff88; }
+.log-status.error { color: #ff0044; }
+
+.log-duration {
+  color: rgba(0, 255, 0, 0.5);
+  min-width: 45px;
+  text-align: right;
+}
+
+.console-input {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid rgba(0, 255, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.console-prompt {
+  color: #0f0;
+  margin-right: 0.5rem;
+  font-size: 0.7rem;
+}
+
+.console-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #0f0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  outline: none;
+}
+
+.console-input-field::placeholder {
+  color: rgba(0, 255, 0, 0.3);
+}
+
+@media print {
+  .hacker-console {
+    display: none;
+  }
+}

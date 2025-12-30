@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Curriculum | PayTabs Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-curriculum.js"></script>
+  <style>
+    :root {
+      --gradient-start: #0f0c29;
+      --gradient-mid: #302b63;
+      --gradient-end: #24243e;
+      --accent-cyan: #00d4ff;
+      --accent-violet: #7c3aed;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-bg-hover: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-hover: rgba(255, 255, 255, 0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+      background-attachment: fixed;
+      color: white;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 320px;
+      grid-template-rows: 64px 1fr;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-content {
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.25rem;
+    }
+
+    /* Week Cards */
+    .weeks-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .week-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .week-card:hover {
+      border-color: var(--glass-border-hover);
+    }
+
+    .week-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--glass-border);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .week-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .week-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.125rem;
+      flex-shrink: 0;
+    }
+
+    .week-info {
+      flex: 1;
+    }
+
+    .week-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .week-description {
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .week-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .task-count {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .task-count svg {
+      opacity: 0.6;
+    }
+
+    .expand-icon {
+      width: 24px;
+      height: 24px;
+      color: rgba(255, 255, 255, 0.4);
+      transition: transform 0.3s ease;
+    }
+
+    .week-card.expanded .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Tasks List */
+    .tasks-container {
+      padding: 1rem 1.5rem 1.5rem;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .task-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .task-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--glass-border-hover);
+    }
+
+    .task-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .task-icon.learning {
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    .task-icon.exercise {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--accent-violet);
+    }
+
+    .task-icon.project {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .task-description {
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .task-category {
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .task-category.learning {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-cyan);
+    }
+
+    .task-category.exercise {
+      background: rgba(124, 58, 237, 0.1);
+      color: var(--accent-violet);
+    }
+
+    .task-category.project {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+
+    /* Empty State */
+    .empty-tasks {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.875rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+    }
+
+    /* Summary Stats */
+    .curriculum-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+    [x-cloak] { display: none !important; }
+
+    /* Admin Buttons */
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-secondary-sm {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary-sm:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-hover);
+      color: white;
+    }
+
+    /* Category List */
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .category-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+    }
+
+    .category-color {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .category-info {
+      flex: 1;
+    }
+
+    .category-label {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .category-meta {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .scorable-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.125rem 0.375rem;
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--accent-cyan);
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-input-color {
+      width: 100%;
+      height: 48px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .form-input-color::-webkit-color-swatch-wrapper {
+      padding: 4px;
+    }
+
+    .form-input-color::-webkit-color-swatch {
+      border-radius: 6px;
+      border: none;
+    }
+
+    .icon-select {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .icon-option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid var(--glass-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .icon-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+    }
+
+    .icon-option.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-cyan);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.875rem 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-label:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--glass-border-hover);
+    }
+
+    .form-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent-cyan);
+      cursor: pointer;
+    }
+
+    .checkbox-text {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--glass-bg-hover);
+      color: white;
+    }
+
+    .btn-icon.danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, var(--gradient-mid), var(--gradient-end));
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--glass-bg-hover);
+      color: white;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent-cyan);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-select option {
+      background: var(--gradient-mid);
+      color: white;
+    }
+
+    .form-help {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 0.5rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 0.875rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-bg-hover);
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-danger {
+      flex: 1;
+      padding: 0.875rem;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      color: #f87171;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Alert */
+    .alert {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .alert.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .alert.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    /* Task actions in admin mode */
+    .task-actions {
+      display: flex;
+      gap: 0.25rem;
+      margin-left: 0.5rem;
+    }
+
+    .task-actions .btn-icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-left, .sidebar-right {
+        display: none;
+      }
+      .curriculum-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout" x-data="curriculumPage()" x-cloak>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Alert -->
+      <div class="alert" :class="alert.type" x-show="alert.show" x-cloak x-transition>
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path x-show="alert.type === 'success'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          <path x-show="alert.type === 'error'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span x-text="alert.message"></span>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Curriculum</h1>
+          <p class="page-subtitle">Onboarding program structure and tasks</p>
+        </div>
+        <!-- Admin Buttons -->
+        <div class="header-actions" x-show="isAdminUser">
+          <button class="btn-secondary-sm" @click="openCategoriesModal">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Categories
+          </button>
+          <button class="btn-secondary-sm" @click="openStatusesModal">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Statuses
+          </button>
+          <button class="btn-add" @click="showAddWeekModal = true">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Week
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="curriculum-stats">
+        <div class="stat-card">
+          <div class="stat-value" x-text="weeks.length">0</div>
+          <div class="stat-label">Weeks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" x-text="tasks.length">0</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" x-text="getEstimatedDuration()">0</div>
+          <div class="stat-label">Days Program</div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <template x-if="weeks.length === 0">
+        <div class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+          <h2 class="empty-title">No curriculum yet</h2>
+          <p class="empty-text">The curriculum hasn't been set up. Contact an admin to add weeks and tasks.</p>
+        </div>
+      </template>
+
+      <!-- Weeks List -->
+      <div class="weeks-container" x-show="weeks.length > 0">
+        <template x-for="week in weeks" :key="week.id">
+          <div class="week-card" :class="{ 'expanded': expandedWeek === week.id }">
+            <div class="week-header" @click="toggleWeek(week.id)">
+              <div class="week-number" x-text="week.week_number"></div>
+              <div class="week-info">
+                <div class="week-title" x-text="week.title"></div>
+                <div class="week-description" x-text="week.description || 'No description'"></div>
+              </div>
+              <div class="week-meta">
+                <div class="task-count">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                  </svg>
+                  <span x-text="getTaskCount(week.id) + ' tasks'"></span>
+                </div>
+                <!-- Admin actions for week -->
+                <div class="actions" x-show="isAdminUser" @click.stop>
+                  <button class="btn-icon" @click="openAddTaskModal(week)" title="Add Task">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" @click="editWeek(week)" title="Edit Week">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon danger" @click="confirmDeleteWeek(week)" title="Delete Week">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+                <svg class="expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            <div class="tasks-container" x-show="expandedWeek === week.id" x-collapse>
+              <template x-if="getTasksForWeek(week.id).length === 0">
+                <div class="empty-tasks">No tasks in this week yet</div>
+              </template>
+              <template x-for="task in getTasksForWeek(week.id)" :key="task.id">
+                <div class="task-item">
+                  <div class="task-icon" :style="'background: ' + getCategory(task.category_id).color + '20; color: ' + getCategory(task.category_id).color">
+                    <svg x-show="getCategory(task.category_id).icon === 'book'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <svg x-show="getCategory(task.category_id).icon === 'code'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                    <svg x-show="getCategory(task.category_id).icon === 'folder'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <svg x-show="getCategory(task.category_id).icon === 'clipboard'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                  </div>
+                  <div class="task-info">
+                    <div class="task-title" x-text="task.title"></div>
+                    <div class="task-description" x-text="task.description || 'No description'" x-show="task.description"></div>
+                  </div>
+                  <span class="task-category" :style="'background: ' + getCategory(task.category_id).color + '1a; color: ' + getCategory(task.category_id).color" x-text="getCategory(task.category_id).label"></span>
+                  <!-- Admin actions for task -->
+                  <div class="task-actions" x-show="isAdminUser">
+                    <button class="btn-icon" @click="editTask(task)" title="Edit Task">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                    </button>
+                    <button class="btn-icon danger" @click="confirmDeleteTask(task)" title="Delete Task">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+
+    <!-- Add Week Modal -->
+    <div class="modal-overlay" x-show="showAddWeekModal" x-cloak @click.self="showAddWeekModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add New Week</h2>
+          <button class="modal-close" @click="showAddWeekModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addWeek">
+          <div class="form-group">
+            <label class="form-label">Week Number</label>
+            <input type="number" class="form-input" x-model="newWeek.week_number" required min="1" placeholder="e.g., 1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-input" x-model="newWeek.title" required placeholder="Week title">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description (Optional)</label>
+            <input type="text" class="form-input" x-model="newWeek.description" placeholder="Brief description">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddWeekModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Create Week</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Week Modal -->
+    <div class="modal-overlay" x-show="showEditWeekModal" x-cloak @click.self="showEditWeekModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Week</h2>
+          <button class="modal-close" @click="showEditWeekModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveWeek" x-show="editingWeek">
+          <div class="form-group">
+            <label class="form-label">Week Number</label>
+            <input type="number" class="form-input" x-model="editingWeek.week_number" required min="1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-input" x-model="editingWeek.title" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-input" x-model="editingWeek.description">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showEditWeekModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal-overlay" x-show="showAddTaskModal" x-cloak @click.self="showAddTaskModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add Task to Week <span x-text="selectedWeekForTask?.week_number"></span></h2>
+          <button class="modal-close" @click="showAddTaskModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addTask">
+          <div class="form-group">
+            <label class="form-label">Task Title</label>
+            <input type="text" class="form-input" x-model="newTask.title" required placeholder="Enter task title">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description (Optional)</label>
+            <input type="text" class="form-input" x-model="newTask.description" placeholder="Task description">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" x-model="newTask.category_id">
+              <template x-for="cat in categories" :key="cat.id">
+                <option :value="cat.id" x-text="cat.label"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Order</label>
+            <select class="form-select" x-model="newTask.order_index">
+              <option :value="getNextOrderIndex(selectedWeekForTask?.id)">Add at end</option>
+              <template x-for="(task, idx) in getTasksForWeek(selectedWeekForTask?.id)" :key="task.id">
+                <option :value="task.order_index" x-text="'Before: ' + task.title"></option>
+              </template>
+            </select>
+            <p class="form-help">Choose where to insert this task in the week</p>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddTaskModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Create Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal-overlay" x-show="showEditTaskModal" x-cloak @click.self="showEditTaskModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Task</h2>
+          <button class="modal-close" @click="showEditTaskModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveTask" x-show="editingTask">
+          <div class="form-group">
+            <label class="form-label">Task Title</label>
+            <input type="text" class="form-input" x-model="editingTask.title" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-input" x-model="editingTask.description">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" x-model="editingTask.category_id">
+              <template x-for="cat in categories" :key="cat.id">
+                <option :value="cat.id" x-text="cat.label"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Order</label>
+            <select class="form-select" x-model="editingTask.order_index">
+              <template x-for="task in getTasksForWeek(editingTask?.week_id)" :key="task.id">
+                <option :value="task.order_index" x-text="task.id === editingTask?.id ? 'Current position (' + task.order_index + ')' : 'Position ' + task.order_index + ': ' + task.title"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showEditTaskModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Confirm Delete</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">
+          Are you sure you want to delete <strong x-text="deleteTarget?.title || deleteTarget?.label || ('Week ' + deleteTarget?.week_number)"></strong>?
+          <template x-if="deleteType === 'week'">
+            <span style="color: #f87171;"> This will also delete all tasks in this week!</span>
+          </template>
+          <template x-if="deleteType === 'category'">
+            <span style="color: #f87171;"> Tasks using this category will have no category!</span>
+          </template>
+          This action cannot be undone.
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button type="button" class="btn-danger" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories List Modal -->
+    <div class="modal-overlay" x-show="showCategoriesModal" x-cloak @click.self="showCategoriesModal = false">
+      <div class="modal-content" style="max-width: 560px;" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Task Categories</h2>
+          <button class="modal-close" @click="showCategoriesModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="category-list">
+          <template x-for="cat in categories" :key="cat.id">
+            <div class="category-item">
+              <div class="category-color" :style="'background: ' + cat.color + '20; color: ' + cat.color">
+                <svg x-show="cat.icon === 'book'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <svg x-show="cat.icon === 'code'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                <svg x-show="cat.icon === 'folder'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+                <svg x-show="cat.icon === 'clipboard'" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+              </div>
+              <div class="category-info">
+                <div class="category-label" x-text="cat.label"></div>
+                <div class="category-meta">
+                  <span x-text="getTaskCountForCategory(cat.id) + ' tasks'"></span>
+                  <span class="scorable-badge" x-show="cat.has_score">Scorable</span>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-icon" @click="editCategory(cat)" title="Edit">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" @click="confirmDeleteCategory(cat)" title="Delete">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <button class="btn-add" style="width: 100%;" @click="openAddCategoryModal">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add Category
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal-overlay" x-show="showAddCategoryModal" x-cloak @click.self="showAddCategoryModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add Category</h2>
+          <button class="modal-close" @click="showAddCategoryModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addCategory">
+          <div class="form-group">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-input" x-model="newCategory.label" required placeholder="e.g., Research">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Internal Name</label>
+            <input type="text" class="form-input" x-model="newCategory.name" required placeholder="e.g., research" pattern="[a-z_]+">
+            <p class="form-help">Lowercase letters and underscores only</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-input-color" x-model="newCategory.color">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Icon</label>
+              <div class="icon-select">
+                <div class="icon-option" :class="{ 'selected': newCategory.icon === 'book' }" @click="newCategory.icon = 'book'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': newCategory.icon === 'code' }" @click="newCategory.icon = 'code'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': newCategory.icon === 'folder' }" @click="newCategory.icon = 'folder'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': newCategory.icon === 'clipboard' }" @click="newCategory.icon = 'clipboard'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" class="form-checkbox" x-model="newCategory.has_score">
+              <span class="checkbox-text">Enable scoring (1-10) for tasks in this category</span>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddCategoryModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Create Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal-overlay" x-show="showEditCategoryModal" x-cloak @click.self="showEditCategoryModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Category</h2>
+          <button class="modal-close" @click="showEditCategoryModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveCategory" x-show="editingCategory">
+          <div class="form-group">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-input" x-model="editingCategory.label" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Internal Name</label>
+            <input type="text" class="form-input" x-model="editingCategory.name" required pattern="[a-z_]+">
+            <p class="form-help">Lowercase letters and underscores only</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-input-color" x-model="editingCategory.color">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Icon</label>
+              <div class="icon-select">
+                <div class="icon-option" :class="{ 'selected': editingCategory.icon === 'book' }" @click="editingCategory.icon = 'book'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': editingCategory.icon === 'code' }" @click="editingCategory.icon = 'code'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': editingCategory.icon === 'folder' }" @click="editingCategory.icon = 'folder'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                  </svg>
+                </div>
+                <div class="icon-option" :class="{ 'selected': editingCategory.icon === 'clipboard' }" @click="editingCategory.icon = 'clipboard'">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" class="form-checkbox" x-model="editingCategory.has_score">
+              <span class="checkbox-text">Enable scoring (1-10) for tasks in this category</span>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showEditCategoryModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Statuses List Modal -->
+    <div class="modal-overlay" x-show="showStatusesModal" x-cloak @click.self="showStatusesModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Task Statuses</h2>
+          <button class="modal-close" @click="showStatusesModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="category-list">
+          <template x-for="status in statuses" :key="status.id">
+            <div class="category-item">
+              <div class="category-color" :style="'background: ' + status.color + '20; color: ' + status.color">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                </svg>
+              </div>
+              <div class="category-info">
+                <div class="category-label" x-text="status.label"></div>
+                <div class="category-meta">
+                  <span x-text="'Order: ' + status.sort_order"></span>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-icon" @click="editStatus(status)" title="Edit">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" @click="confirmDeleteStatus(status)" title="Delete">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <button class="btn-add" style="width: 100%;" @click="openAddStatusModal">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add Status
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Status Modal -->
+    <div class="modal-overlay" x-show="showAddStatusModal" x-cloak @click.self="showAddStatusModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add Status</h2>
+          <button class="modal-close" @click="showAddStatusModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addStatus">
+          <div class="form-group">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-input" x-model="newStatus.label" required placeholder="e.g., On Hold">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Internal Name</label>
+            <input type="text" class="form-input" x-model="newStatus.name" required placeholder="e.g., on_hold" pattern="[a-z_]+">
+            <p class="form-help">Lowercase letters and underscores only</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-input-color" x-model="newStatus.color">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sort Order</label>
+              <input type="number" class="form-input" x-model="newStatus.sort_order" min="1" required>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddStatusModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Create Status</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Status Modal -->
+    <div class="modal-overlay" x-show="showEditStatusModal" x-cloak @click.self="showEditStatusModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Status</h2>
+          <button class="modal-close" @click="showEditStatusModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveStatus" x-show="editingStatus">
+          <div class="form-group">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-input" x-model="editingStatus.label" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Internal Name</label>
+            <input type="text" class="form-input" x-model="editingStatus.name" required pattern="[a-z_]+">
+            <p class="form-help">Lowercase letters and underscores only</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="color" class="form-input-color" x-model="editingStatus.color">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sort Order</label>
+              <input type="number" class="form-input" x-model="editingStatus.sort_order" min="1" required>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showEditStatusModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

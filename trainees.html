@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Trainees | PayTabs Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-trainees.js"></script>
+  <style>
+    :root {
+      --gradient-start: #0f0c29;
+      --gradient-mid: #302b63;
+      --gradient-end: #24243e;
+      --accent-cyan: #00d4ff;
+      --accent-violet: #7c3aed;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-bg-hover: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+      background-attachment: fixed;
+      color: white;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 320px;
+      grid-template-rows: 64px 1fr;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-content {
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+
+    /* Trainees Grid */
+    .trainees-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .trainee-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .trainee-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .trainee-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .trainee-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.125rem;
+      flex-shrink: 0;
+    }
+
+    .trainee-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .trainee-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .trainee-email {
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.375rem;
+    }
+
+    .trainee-mentor {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .trainee-mentor span {
+      color: var(--accent-cyan);
+    }
+
+    .trainee-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .stat-label {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    .progress-bar {
+      grid-column: 1 / -1;
+      margin-top: 0.5rem;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, var(--gradient-mid), var(--gradient-end));
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--glass-bg-hover);
+      color: white;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent-cyan);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-select option {
+      background: var(--gradient-mid);
+      color: white;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 0.875rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-bg-hover);
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+    [x-cloak] { display: none !important; }
+
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-left, .sidebar-right {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout" x-data="traineesPage()" x-cloak>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Trainees</h1>
+        <button class="btn-add" @click="showAddModal = true">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add Trainee
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <template x-if="trainees.length === 0">
+        <div class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <h2 class="empty-title">No trainees yet</h2>
+          <p class="empty-text">Add your first trainee to start tracking their progress.</p>
+        </div>
+      </template>
+
+      <!-- Trainees Grid -->
+      <div class="trainees-grid" x-show="trainees.length > 0">
+        <template x-for="trainee in trainees" :key="trainee.id">
+          <div class="trainee-card">
+            <div class="trainee-header">
+              <div class="trainee-avatar" x-text="getInitials(trainee.name)"></div>
+              <div class="trainee-info">
+                <div class="trainee-name" x-text="trainee.name"></div>
+                <div class="trainee-email" x-text="trainee.email || 'No email'"></div>
+                <div class="trainee-mentor">
+                  Mentor: <span x-text="getMentorName(trainee.assigned_mentor_id)"></span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.375rem;">
+                <button style="width: 28px; height: 28px; border-radius: 6px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center;" @click="editTrainee(trainee)" title="Edit">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button style="width: 28px; height: 28px; border-radius: 6px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center;" @click="confirmDelete(trainee)" title="Delete">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="trainee-stats">
+              <div class="stat">
+                <div class="stat-value" x-text="getCurrentWeek(trainee.id)"></div>
+                <div class="stat-label">Week</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" x-text="getCompletedTasks(trainee.id)"></div>
+                <div class="stat-label">Tasks Done</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" x-text="getProgress(trainee.id) + '%'"></div>
+                <div class="stat-label">Progress</div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-track">
+                  <div class="progress-fill" :style="'width: ' + getProgress(trainee.id) + '%'"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+
+    <!-- Add Trainee Modal -->
+    <div class="modal-overlay" x-show="showAddModal" x-cloak @click.self="showAddModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add New Trainee</h2>
+          <button class="modal-close" @click="showAddModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addTrainee">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" x-model="newTrainee.name" required placeholder="Enter trainee name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email (Optional)</label>
+            <input type="email" class="form-input" x-model="newTrainee.email" placeholder="trainee@example.com">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assigned Mentor</label>
+            <select class="form-select" x-model="newTrainee.assigned_mentor_id">
+              <option value="">Select a mentor...</option>
+              <template x-for="mentor in mentors" :key="mentor.id">
+                <option :value="mentor.id" x-text="mentor.name"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-input" x-model="newTrainee.start_date">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Add Trainee</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Trainee Modal -->
+    <div class="modal-overlay" x-show="showEditModal" x-cloak @click.self="showEditModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Trainee</h2>
+          <button class="modal-close" @click="showEditModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveTrainee" x-show="editingTrainee">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" x-model="editingTrainee.name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" x-model="editingTrainee.email">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assigned Mentor</label>
+            <select class="form-select" x-model="editingTrainee.assigned_mentor_id">
+              <option value="">Unassigned</option>
+              <template x-for="mentor in mentors" :key="mentor.id">
+                <option :value="mentor.id" x-text="mentor.name"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-input" x-model="editingTrainee.start_date">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showEditModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Confirm Delete</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">
+          Are you sure you want to delete <strong x-text="deleteTarget?.name"></strong>? This action cannot be undone.
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button type="button" class="btn-primary" style="background: rgba(239, 68, 68, 0.8);" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
