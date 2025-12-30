@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
     get mentors() { return Alpine.store('app').mentors; },
     get progress() { return Alpine.store('app').progress; },
     get categories() { return Alpine.store('app').categories; },
+    get statuses() { return Alpine.store('app').statuses; },
     get activities() { return Alpine.store('app').activityLog; },
 
     notes: [],
@@ -106,6 +107,15 @@ document.addEventListener('alpine:init', () => {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     },
 
+    getStatusByName(statusName) {
+      return this.statuses.find(s => s.name === statusName);
+    },
+
+    getStatusId(statusName) {
+      const status = this.getStatusByName(statusName);
+      return status?.id || null;
+    },
+
     getMentorName(mentorId) {
       const mentor = this.mentors.find(m => m.id === mentorId);
       return mentor?.name || 'Unassigned';
@@ -145,7 +155,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     getCurrentWeek(traineeId) {
-      const traineeProgress = this.progress.filter(p => p.trainee_id === traineeId && p.status === 'done');
+      const doneStatusId = this.getStatusId('done');
+      const traineeProgress = this.progress.filter(p => p.trainee_id === traineeId && p.status_id === doneStatusId);
       const completedTaskIds = traineeProgress.map(p => p.task_id);
 
       for (const week of this.weeks) {
@@ -162,7 +173,8 @@ document.addEventListener('alpine:init', () => {
       const totalTasks = this.tasks.length;
       if (totalTasks === 0) return 0;
 
-      const doneTasks = this.progress.filter(p => p.trainee_id === traineeId && p.status === 'done').length;
+      const doneStatusId = this.getStatusId('done');
+      const doneTasks = this.progress.filter(p => p.trainee_id === traineeId && p.status_id === doneStatusId).length;
       return Math.round((doneTasks / totalTasks) * 100);
     },
 
@@ -173,7 +185,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     getCompletedTasksCount() {
-      return this.progress.filter(p => p.status === 'done').length;
+      const doneStatusId = this.getStatusId('done');
+      return this.progress.filter(p => p.status_id === doneStatusId).length;
     },
 
     getTotalTasksCount() {
@@ -181,36 +194,40 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInProgressCount() {
-      return this.progress.filter(p => p.status === 'in_progress').length;
+      const inProgressStatusId = this.getStatusId('in_progress');
+      return this.progress.filter(p => p.status_id === inProgressStatusId).length;
     },
 
-    getStatusPercent(status) {
+    getStatusPercent(statusName) {
       const total = this.getTotalTasksCount();
       if (total === 0) return 0;
 
+      const statusId = this.getStatusId(statusName);
       let count;
-      if (status === 'pending') {
+      if (statusName === 'pending') {
         const tracked = this.progress.length;
-        count = total - tracked + this.progress.filter(p => p.status === 'pending').length;
+        count = total - tracked + this.progress.filter(p => p.status_id === statusId).length;
       } else {
-        count = this.progress.filter(p => p.status === status).length;
+        count = this.progress.filter(p => p.status_id === statusId).length;
       }
 
       return Math.round((count / total) * 100);
     },
 
     getBlockedCount() {
-      return this.progress.filter(p => p.status === 'blocked').length;
+      const blockedStatusId = this.getStatusId('blocked');
+      return this.progress.filter(p => p.status_id === blockedStatusId).length;
     },
 
     getWeekCompletionPercent(weekId) {
       const weekTasks = this.tasks.filter(t => t.week_id === weekId);
       if (weekTasks.length === 0 || this.trainees.length === 0) return 0;
 
+      const doneStatusId = this.getStatusId('done');
       const totalPossible = weekTasks.length * this.trainees.length;
       const completed = this.progress.filter(p => {
         const task = this.tasks.find(t => t.id === p.task_id);
-        return task && task.week_id === weekId && p.status === 'done';
+        return task && task.week_id === weekId && p.status_id === doneStatusId;
       }).length;
 
       return Math.round((completed / totalPossible) * 100);
@@ -397,7 +414,7 @@ document.addEventListener('alpine:init', () => {
       if (diff < 60) return 'Just now';
       if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
       if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-      return date.toLocaleDateString();
+      return Alpine.store('app').formatDate(date);
     },
 
     formatActivity(activity) {

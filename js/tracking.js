@@ -135,7 +135,7 @@ document.addEventListener('alpine:init', () => {
       if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
       if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
       if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-      return date.toLocaleDateString();
+      return Alpine.store('app').formatDate(date);
     },
 
     getTotalTasksCount() {
@@ -228,8 +228,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     formatDateTime(timestamp) {
-      if (!timestamp) return '-';
-      return new Date(timestamp).toLocaleString();
+      return Alpine.store('app').formatDateTime(timestamp);
     },
 
     calculateDuration(startedAt, completedAt) {

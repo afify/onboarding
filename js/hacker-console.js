@@ -14,11 +14,39 @@ function escapeHtml(str) {
   return str.replace(/[&<>"'`=/]/g, char => htmlEscapes[char]);
 }
 
+function setCookie(name, value, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
 const state = {
   logs: [],
   logId: 0,
-  filter: ''
+  filter: '',
+  hidden: getCookie('hacker-console-hidden') === 'true'
 };
+
+function toggleConsole(hide) {
+  state.hidden = hide;
+  setCookie('hacker-console-hidden', hide ? 'true' : 'false');
+
+  const consoleEl = document.querySelector('.hacker-console');
+  const toggleBtn = document.querySelector('.hacker-console-toggle');
+
+  if (consoleEl) {
+    consoleEl.classList.toggle('hidden', hide);
+  }
+  if (toggleBtn) {
+    toggleBtn.classList.toggle('visible', hide);
+  }
+
+  document.body.classList.toggle('console-hidden', hide);
+}
 
 function addLog(log) {
   state.logs.unshift({ ...log, id: ++state.logId });
@@ -214,6 +242,7 @@ function createConsole() {
 
   const consoleEl = document.createElement('div');
   consoleEl.className = 'hacker-console';
+  if (state.hidden) consoleEl.classList.add('hidden');
 
   const header = document.createElement('div');
   header.className = 'console-header';
@@ -221,6 +250,9 @@ function createConsole() {
   const title = document.createElement('div');
   title.className = 'console-title';
   title.textContent = 'SUPABASE NETWORK';
+
+  const headerRight = document.createElement('div');
+  headerRight.className = 'console-header-right';
 
   const stats = document.createElement('div');
   stats.className = 'console-stats';
@@ -241,8 +273,17 @@ function createConsole() {
   stats.appendChild(createStat('OK', 'hacker-ok-count'));
   stats.appendChild(createStat('ERR', 'hacker-err-count'));
 
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'console-close-btn';
+  closeBtn.innerHTML = '×';
+  closeBtn.title = 'Hide console';
+  closeBtn.addEventListener('click', () => toggleConsole(true));
+
+  headerRight.appendChild(stats);
+  headerRight.appendChild(closeBtn);
+
   header.appendChild(title);
-  header.appendChild(stats);
+  header.appendChild(headerRight);
 
   const body = document.createElement('div');
   body.className = 'console-body';
@@ -268,7 +309,19 @@ function createConsole() {
   consoleEl.appendChild(body);
   consoleEl.appendChild(inputWrapper);
 
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'hacker-console-toggle';
+  if (state.hidden) toggleBtn.classList.add('visible');
+  toggleBtn.innerHTML = '▼';
+  toggleBtn.title = 'Show console';
+  toggleBtn.addEventListener('click', () => toggleConsole(false));
+
   document.body.appendChild(consoleEl);
+  document.body.appendChild(toggleBtn);
+
+  if (state.hidden) {
+    document.body.classList.add('console-hidden');
+  }
 
   filterInput.addEventListener('input', (e) => {
     state.filter = e.target.value.toLowerCase();

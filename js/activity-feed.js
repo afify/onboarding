@@ -119,6 +119,13 @@ document.addEventListener('alpine:init', () => {
         if (action === 'DELETE') return `<strong>${mentorName}</strong> removed mentor <span class="highlight">${mentorTargetName}</span>`;
       }
 
+      if (activity.entity_type === 'task_categories') {
+        const catLabel = escapeHtml(activity.details?.label || 'a category');
+        if (action === 'INSERT') return `<strong>${mentorName}</strong> created category <span class="highlight">${catLabel}</span>`;
+        if (action === 'UPDATE') return `<strong>${mentorName}</strong> updated category <span class="highlight">${catLabel}</span>`;
+        if (action === 'DELETE') return `<strong>${mentorName}</strong> deleted category <span class="highlight">${catLabel}</span>`;
+      }
+
       return `<strong>${mentorName}</strong> made an update`;
     },
 
@@ -134,7 +141,7 @@ document.addEventListener('alpine:init', () => {
       if (mins < 60) return mins + 'm ago';
       if (hours < 24) return hours + 'h ago';
       if (days < 7) return days + 'd ago';
-      return date.toLocaleDateString();
+      return Alpine.store('app').formatDate(date);
     }
   }));
 });

@@ -1,4 +1,4 @@
-body {
+body:not(.console-hidden) {
   padding-bottom: 200px !important;
 }
 
@@ -16,6 +16,7 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 30px rgba(0, 255, 0, 0.1), inset 0 0 60px rgba(0, 255, 0, 0.02);
+  transition: transform 0.3s ease;
 }
 
 .console-header {
@@ -47,11 +48,75 @@ body {
   51%, 100% { opacity: 0; }
 }
 
+.console-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .console-stats {
   display: flex;
   gap: 1rem;
   font-size: 0.6rem;
   color: rgba(0, 255, 0, 0.6);
+}
+
+.console-close-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  color: #0f0;
+  width: 24px;
+  height: 24px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.console-close-btn:hover {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #0f0;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.hacker-console.hidden {
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.hacker-console-toggle {
+  position: fixed;
+  bottom: 10px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #0f0;
+  color: #0f0;
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: var(--z-console);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.hacker-console-toggle.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hacker-console-toggle:hover {
+  background: rgba(0, 255, 0, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
 }
 
 .console-stat {

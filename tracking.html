@@ -150,10 +150,10 @@
                   <div class="task-category" :style="'color: ' + getCategory(item.task.category_id).color" x-text="getCategory(item.task.category_id).label"></div>
                 </td>
                 <td>
-                  <span class="date-cell" :class="{ 'overdue': isOverdue(item) }" x-text="item.startDate || '-'"></span>
+                  <span class="date-cell" :class="{ 'overdue': isOverdue(item) }" x-text="$store.app.formatDate(item.startDate)"></span>
                 </td>
                 <td>
-                  <span class="date-cell" :class="{ 'overdue': isOverdue(item), 'due-soon': isDueSoon(item) }" x-text="item.dueDate || '-'"></span>
+                  <span class="date-cell" :class="{ 'overdue': isOverdue(item), 'due-soon': isDueSoon(item) }" x-text="$store.app.formatDate(item.dueDate)"></span>
                 </td>
                 <td>
                   <div class="status-badge" :style="'background: ' + item.status.color + '20; color: ' + item.status.color">

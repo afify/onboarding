@@ -69,7 +69,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     formatDate(date) {
-      return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return Alpine.store('app').formatDate(date);
     },
 
     async addMentor() {

@@ -5,6 +5,25 @@ let dataPromise = null;
 
 export function initStore(Alpine) {
   Alpine.store('app', {
+    // Date formatting utilities (dd-mm-yyyy)
+    formatDate(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}-${month}-${d.getFullYear()}`;
+    },
+
+    formatDateTime(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return `${day}-${month}-${d.getFullYear()} ${hours}:${mins}`;
+    },
+
     session: null,
     user: null,
     mentor: null,
