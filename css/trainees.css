@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════
+   TRAINEES PAGE - PayTabs Onboarding Tracker
+   Trainees management page specific styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* Trainees Grid */
+.trainees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Trainee Card */
+.trainee-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all var(--transition-normal);
+}
+
+.trainee-card:hover {
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+}
+
+.trainee-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.trainee-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.trainee-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.trainee-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.trainee-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trainee-mentor {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+.trainee-mentor span {
+  color: var(--accent-cyan);
+}
+
+/* Stats Row */
+.trainee-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.trainee-stats .stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.trainee-stats .stat-label {
+  font-size: 0.6875rem;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+/* Progress bar in trainee cards */
+.trainee-stats .progress-bar {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+}
+
+/* Progress Section */
+.trainee-progress {
+  margin-bottom: 1rem;
+}
+
+/* Actions */
+.trainee-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.trainee-actions .btn-icon {
+  flex: 1;
+  height: 36px;
+  width: auto;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  gap: 0.5rem;
+}
+
+.trainee-actions .btn-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Empty State */
+.trainees-empty {
+  grid-column: 1 / -1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trainees-grid {
+    grid-template-columns: 1fr;
+  }
+}

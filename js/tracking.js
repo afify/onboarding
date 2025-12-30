@@ -295,14 +295,62 @@ document.addEventListener('alpine:init', () => {
       return new Date(timestamp).toLocaleString();
     },
 
+    // Duration calculation
+    calculateDuration(startedAt, completedAt) {
+      if (!startedAt) return null;
+
+      const start = new Date(startedAt);
+      const end = completedAt ? new Date(completedAt) : new Date();
+      const diffMs = end - start;
+
+      if (diffMs < 0) return null;
+
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 0) {
+        const remainingHours = diffHours % 24;
+        return remainingHours > 0 ? `${diffDays}d ${remainingHours}h` : `${diffDays}d`;
+      }
+      if (diffHours > 0) {
+        const remainingMins = diffMins % 60;
+        return remainingMins > 0 ? `${diffHours}h ${remainingMins}m` : `${diffHours}h`;
+      }
+      return `${diffMins}m`;
+    },
+
+    formatDuration(item) {
+      const prog = this.getTaskProgress(item.trainee.id, item.task.id);
+      if (!prog?.duration_minutes) return '-';
+
+      const mins = prog.duration_minutes;
+      const hours = Math.floor(mins / 60);
+      const remainingMins = mins % 60;
+
+      if (hours > 0) {
+        return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
+      }
+      return `${mins}m`;
+    },
+
+    getDurationStatus(item) {
+      const prog = this.getTaskProgress(item.trainee.id, item.task.id);
+      if (!prog?.duration_minutes) return 'not-started';
+      if (item.status?.name === 'done') return 'completed';
+      return 'in-progress';
+    },
+
     // Modal functions
     openEditModal(item) {
       this.editingItem = item;
+      const prog = this.getTaskProgress(item.trainee.id, item.task.id);
       this.editForm = {
         status_id: item.statusId || this.getDefaultStatusId(),
         start_date: item.startDate || '',
         due_date: item.dueDate || '',
-        score: item.score || null
+        score: item.score || null,
+        duration_minutes: prog?.duration_minutes || null
       };
       this.showEditModal = true;
     },
@@ -322,6 +370,7 @@ document.addEventListener('alpine:init', () => {
         start_date: this.editForm.start_date || null,
         due_date: this.editForm.due_date || null,
         score: scoreValue,
+        duration_minutes: this.editForm.duration_minutes ? parseInt(this.editForm.duration_minutes) : null,
         updated_by_mentor_id: this.currentMentor.id,
         updated_at: new Date().toISOString()
       };

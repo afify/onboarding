@@ -1,0 +1,621 @@
+/* ═══════════════════════════════════════════════════════════
+   CURRICULUM PAGE - PayTabs Onboarding Tracker
+   Curriculum management page specific styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* Page Header */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Secondary Small Button */
+.btn-secondary-sm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary-sm:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CURRICULUM STATS
+   ───────────────────────────────────────────────────────────── */
+
+.curriculum-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.curriculum-stats .stat-card {
+  text-align: center;
+}
+
+.curriculum-stats .stat-value {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WEEK CARDS
+   ───────────────────────────────────────────────────────────── */
+
+.weeks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.week-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.week-card:hover {
+  border-color: var(--glass-border-hover);
+}
+
+.week-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.week-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.week-number {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.week-info {
+  flex: 1;
+}
+
+.week-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.week-description {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.week-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.task-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.task-count svg {
+  opacity: 0.6;
+}
+
+.expand-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-subtle);
+  transition: transform var(--transition-normal);
+}
+
+.week-card.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Week Actions */
+.week-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TASKS LIST (within weeks)
+   ───────────────────────────────────────────────────────────── */
+
+.tasks-container {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+/* Task Item (used in curriculum) */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.task-item:last-child {
+  margin-bottom: 0;
+}
+
+.task-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--glass-border-hover);
+}
+
+.task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.task-description {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.task-category {
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Day Badge */
+.day-badge {
+  padding: 0.25rem 0.5rem;
+  background: rgba(124, 58, 237, 0.15);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--accent-violet);
+  white-space: nowrap;
+}
+
+.curriculum-task-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.curriculum-task-item:last-child {
+  margin-bottom: 0;
+}
+
+.curriculum-task-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--glass-border-hover);
+}
+
+/* Task Icon by category */
+.task-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.task-icon.learning {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--accent-cyan);
+}
+
+.task-icon.exercise {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--accent-violet);
+}
+
+.task-icon.project {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.curriculum-task-info {
+  flex: 1;
+}
+
+.curriculum-task-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.curriculum-task-description {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Task Actions */
+.task-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Task Category Badge */
+.curriculum-task-category {
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.curriculum-task-category.learning {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--accent-cyan);
+}
+
+.curriculum-task-category.exercise {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent-violet);
+}
+
+.curriculum-task-category.project {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* Empty Tasks */
+.empty-tasks {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+}
+
+/* Add Task Button (inside week) */
+.add-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.add-task-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CATEGORY LIST (Modal)
+   ───────────────────────────────────────────────────────────── */
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.category-color {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.category-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scorable-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--accent-cyan);
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STATUS LIST (Modal)
+   ───────────────────────────────────────────────────────────── */
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.status-color {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.status-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ICON SELECTOR
+   ───────────────────────────────────────────────────────────── */
+
+.icon-selector,
+.icon-select {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.icon-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.icon-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.icon-option.selected {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.icon-option input[type="radio"] {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLOR PICKER
+   ───────────────────────────────────────────────────────────── */
+
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.color-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch {
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.color-input::-moz-color-swatch {
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.color-preview {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ORDER INDEX SELECT
+   ───────────────────────────────────────────────────────────── */
+
+.order-select {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 0.5rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.order-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.order-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.order-option.selected {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.order-option input[type="radio"] {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .curriculum-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .week-header {
+    flex-wrap: wrap;
+  }
+
+  .week-meta {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+  }
+}

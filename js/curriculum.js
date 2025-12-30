@@ -33,7 +33,7 @@ document.addEventListener('alpine:init', () => {
     // Form data
     newWeek: { week_number: '', title: '', description: '' },
     editingWeek: null,
-    newTask: { week_id: '', title: '', description: '', category_id: null, order_index: 1 },
+    newTask: { week_id: '', title: '', description: '', category_id: null, order_index: 1, day_number: 1 },
     editingTask: null,
     selectedWeekForTask: null,
     newCategory: { name: '', label: '', color: '#00d4ff', icon: 'book', has_score: false },
@@ -151,12 +151,14 @@ document.addEventListener('alpine:init', () => {
 
         if (error) throw error;
 
+        this.showAddWeekModal = false;
         this.showAlert('success', `Week ${this.newWeek.week_number} created successfully`);
         this.newWeek = { week_number: '', title: '', description: '' };
-        this.showAddWeekModal = false;
         await this.loadData();
       } catch (err) {
-        this.showAlert('error', err.message || 'Failed to create week');
+        this.showAddWeekModal = false;
+        console.error('Error creating week:', err);
+        this.showAlert('error', err.message || err.details || 'Failed to create week');
       }
     },
 
@@ -221,7 +223,8 @@ document.addEventListener('alpine:init', () => {
           title: this.newTask.title.trim(),
           description: this.newTask.description.trim() || null,
           category_id: this.newTask.category_id,
-          order_index: selectedOrder
+          order_index: selectedOrder,
+          day_number: parseInt(this.newTask.day_number)
         });
 
         if (error) throw error;
@@ -273,7 +276,9 @@ document.addEventListener('alpine:init', () => {
             title: this.editingTask.title.trim(),
             description: this.editingTask.description?.trim() || null,
             category_id: this.editingTask.category_id,
-            order_index: newOrder
+            order_index: newOrder,
+            week_id: this.editingTask.week_id,
+            day_number: parseInt(this.editingTask.day_number)
           })
           .eq('id', this.editingTask.id);
 
