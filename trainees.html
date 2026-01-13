@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Trainees | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/trainees.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-trainees.js"></script>
+</head>
+<body>
+  <div class="app-layout" x-data="traineesPage" x-cloak>
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Trainees</h1>
+        <button class="btn-add" @click="showAddModal = true">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add Trainee
+        </button>
+      </div>
+
+      <template x-if="$store.app.trainees.length === 0">
+        <div class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <h2 class="empty-title">No trainees yet</h2>
+          <p class="empty-text">Add your first trainee to start tracking their progress.</p>
+        </div>
+      </template>
+
+      <div class="trainees-grid" x-show="$store.app.trainees.length > 0">
+        <template x-for="trainee in $store.app.trainees" :key="trainee.id">
+          <div class="trainee-card">
+            <div class="trainee-header">
+              <div class="trainee-avatar" x-text="getInitials(trainee.name)"></div>
+              <div class="trainee-info">
+                <div class="trainee-name" x-text="trainee.name"></div>
+                <div class="trainee-email" x-text="trainee.email || 'No email'"></div>
+                <div class="trainee-mentor">
+                  Mentors: <span x-text="getMentorNames(trainee.assigned_mentor_ids)"></span>
+                </div>
+                <div class="trainee-start-date">
+                  Started: <span x-text="formatStartDate(trainee)"></span>
+                </div>
+              </div>
+              <div class="trainee-actions">
+                <button class="trainee-action-btn" @click="viewReport(trainee)" :disabled="generatingReport" title="View Report">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+                <button class="trainee-action-btn" @click="downloadReport(trainee)" :disabled="generatingReport" title="Download Report">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                </button>
+                <button class="trainee-action-btn" @click="editTrainee(trainee)" title="Edit">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button class="trainee-action-btn delete" @click="confirmDelete(trainee)" title="Delete">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="trainee-stats">
+              <div class="stat">
+                <div class="stat-value" x-text="getCurrentWeek(trainee.id)"></div>
+                <div class="stat-label">Week</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" x-text="getCompletedTasks(trainee.id)"></div>
+                <div class="stat-label">Tasks Done</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" x-text="getProgressLabel(trainee.id)"></div>
+                <div class="stat-label">Progress</div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-track">
+                  <div class="progress-fill" :style="getProgressStyle(trainee.id)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="trainee-metrics">
+              <div class="metric">
+                <span class="metric-icon" :class="getBlockedTasks(trainee.id) > 0 ? 'blocked' : ''">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                </span>
+                <span class="metric-value" x-text="getBlockedTasks(trainee.id)"></span>
+                <span class="metric-label">Blocked</span>
+              </div>
+              <div class="metric">
+                <span class="metric-icon score">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                  </svg>
+                </span>
+                <span class="metric-value" x-text="formatAverageScore(trainee.id)"></span>
+                <span class="metric-label">Avg Score</span>
+              </div>
+              <div class="metric">
+                <span class="metric-icon activity">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </span>
+                <span class="metric-value" x-text="formatLastActivity(trainee.id)"></span>
+                <span class="metric-label">Last Active</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+
+    <div class="modal-overlay" x-show="showAddModal" x-cloak @click.self="showAddModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add New Trainee</h2>
+          <button class="modal-close" @click="showAddModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addTrainee">
+          <div class="form-group">
+            <label class="form-label" for="newTraineeName">Full Name</label>
+            <input type="text" id="newTraineeName" name="name" class="form-input" x-model="newTraineeName" required placeholder="Enter trainee name" autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newTraineeEmail">Email (Optional)</label>
+            <input type="email" id="newTraineeEmail" name="email" class="form-input" x-model="newTraineeEmail" placeholder="trainee@example.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assigned Mentors</label>
+            <div class="mentor-checkbox-list">
+              <template x-for="mentor in mentors" :key="mentor.id">
+                <label class="mentor-checkbox-item" :class="{ 'selected': isMentorSelected(mentor.id, true) }">
+                  <input type="checkbox" :checked="isMentorSelected(mentor.id, true)" @change="toggleMentorSelection(mentor.id, true)">
+                  <span x-text="mentor.name"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newTraineeStartDate">Start Date</label>
+            <input type="date" id="newTraineeStartDate" name="start_date" class="form-input" x-model="newTraineeStartDate">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Add Trainee</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" x-show="showEditModal" x-cloak @click.self="showEditModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Trainee</h2>
+          <button class="modal-close" @click="showEditModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="editingTrainee">
+          <form @submit.prevent="saveTrainee">
+            <div class="form-group">
+              <label class="form-label" for="editTraineeName">Full Name</label>
+              <input type="text" id="editTraineeName" name="name" class="form-input" x-model="editingTraineeName" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editTraineeEmail">Email</label>
+              <input type="email" id="editTraineeEmail" name="email" class="form-input" x-model="editingTraineeEmail" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Assigned Mentors</label>
+              <div class="mentor-checkbox-list">
+                <template x-for="mentor in mentors" :key="mentor.id">
+                  <label class="mentor-checkbox-item" :class="{ 'selected': isMentorSelected(mentor.id, false) }">
+                    <input type="checkbox" :checked="isMentorSelected(mentor.id, false)" @change="toggleMentorSelection(mentor.id, false)">
+                    <span x-text="mentor.name"></span>
+                  </label>
+                </template>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editTraineeStartDate">Start Date</label>
+              <input type="date" id="editTraineeStartDate" name="start_date" class="form-input" x-model="editingTraineeStartDate">
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showEditModal = false">Cancel</button>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </template>
+      </div>
+    </div>
+
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Confirm Delete</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">
+          Are you sure you want to delete <strong x-text="getDeleteTargetName()"></strong>? This action cannot be undone.
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button type="button" class="btn-primary" style="background: rgba(239, 68, 68, 0.8);" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Daily Tasks | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/tracking.css">
+  <link rel="stylesheet" href="/css/tasks.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-tasks.js"></script>
+</head>
+<body>
+  <div class="app-layout" x-data="tasks" x-cloak>
+    <main class="main-content">
+      <div class="content-header">
+        <h1 class="content-title">Daily Tasks</h1>
+      </div>
+
+      <div class="filters-section">
+        <div class="filter-group">
+          <label class="filter-label" for="filterTrainee">Trainee</label>
+          <select id="filterTrainee" name="trainee" class="filter-select" x-model="filterTrainee">
+            <option value="">All Trainees</option>
+            <template x-for="trainee in $store.app.trainees" :key="trainee.id">
+              <option :value="trainee.id" x-text="trainee.name"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterWeek">Week</label>
+          <select id="filterWeek" name="week" class="filter-select" x-model="filterWeek">
+            <option value="">All Weeks</option>
+            <template x-for="week in $store.app.weeks" :key="week.id">
+              <option :value="week.id" x-text="'Week ' + week.week_number"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterDay">Day</label>
+          <select id="filterDay" name="day" class="filter-select" x-model="filterDay">
+            <option value="">All Days</option>
+            <template x-for="day in uniqueDays" :key="day">
+              <option :value="day" x-text="'Day ' + day"></option>
+            </template>
+          </select>
+        </div>
+
+        <button class="filter-reset" @click="resetFilters" x-show="hasFilters()">
+          Reset Filters
+        </button>
+      </div>
+
+      <div class="tasks-table-container">
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th>Trainee</th>
+              <th>Week</th>
+              <th>Day</th>
+              <th>Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="item in getGroupedRows()" :key="item.trainee.id + '-' + item.week.id + '-' + item.day">
+              <tr>
+                <td>
+                  <div class="trainee-cell">
+                    <div class="trainee-avatar" x-text="getInitials(item.trainee.name)"></div>
+                    <span class="trainee-name" x-text="item.trainee.name"></span>
+                  </div>
+                </td>
+                <td>
+                  <span class="week-badge" x-text="'Week ' + item.week.week_number"></span>
+                </td>
+                <td>
+                  <span class="day-badge" x-text="'Day ' + item.day"></span>
+                </td>
+                <td>
+                  <div class="btn-group">
+                    <button class="btn-view" @click="viewPDF(item)" :disabled="generating" title="View PDF">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                      View
+                    </button>
+                    <button class="btn-download" @click="downloadPDF(item)" :disabled="generating" title="Download PDF">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      Download
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <div class="empty-state" x-show="getGroupedRows().length === 0">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <p class="empty-text">No tasks with dates found.</p>
+          <p class="empty-hint">Tasks must have both start/due dates set and status "Pending" or "In Progress".</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

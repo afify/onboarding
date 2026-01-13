@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Admin Panel | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-admin.js"></script>
+</head>
+<body>
+  <div class="admin-layout" x-data="adminPanel" x-cloak>
+    <div class="admin-main">
+    <div class="alert" :class="alert.type" x-show="alert.show" x-cloak x-transition>
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path x-show="alert.type === 'success'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        <path x-show="alert.type === 'error'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      <span x-text="alert.message"></span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon violet">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </div>
+        <div class="stat-value" x-text="$store.app.mentors.length">0</div>
+        <div class="stat-label">Mentors</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon cyan">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div class="stat-value" x-text="getAdminCount()">0</div>
+        <div class="stat-label">Admins</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Mentors</h2>
+        <button class="btn-add" @click="showAddMentorModal = true">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add Mentor
+        </button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mentor</th>
+            <th>Role</th>
+            <th>Trainees</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="mentor in $store.app.mentors" :key="mentor.id">
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar" x-text="getInitials(mentor.name)"></div>
+                  <div class="user-info">
+                    <span class="user-name" x-text="mentor.name"></span>
+                    <span class="user-email" x-text="mentor.email"></span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="role-badge" :class="mentor.role" x-text="mentor.role"></span>
+              </td>
+              <td x-text="getMentorTraineeCount(mentor.id)"></td>
+              <td x-text="formatDate(mentor.created_at)"></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-icon" @click="editMentor(mentor)" title="Edit">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon danger" @click="confirmDeleteMentor(mentor)" title="Delete" x-show="mentor.role !== 'admin'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-overlay" x-show="showAddMentorModal" x-cloak @click.self="showAddMentorModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Add New Mentor</h2>
+          <button class="modal-close" @click="showAddMentorModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="addMentor">
+          <div class="form-group">
+            <label class="form-label" for="newMentorName">Full Name</label>
+            <input type="text" id="newMentorName" name="name" class="form-input" x-model="newMentorName" required placeholder="Enter mentor name" autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newMentorEmail">Email</label>
+            <input type="email" id="newMentorEmail" name="email" class="form-input" x-model="newMentorEmail" required placeholder="mentor@company.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newMentorPassword">Password</label>
+            <input type="password" id="newMentorPassword" name="password" class="form-input" x-model="newMentorPassword" required placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password">
+            <p class="form-help">The mentor will use this to sign in</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newMentorRole">Role</label>
+            <select id="newMentorRole" name="role" class="form-select" x-model="newMentorRole">
+              <option value="mentor">Mentor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showAddMentorModal = false">Cancel</button>
+            <button type="submit" class="btn-primary">Create Mentor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" x-show="showEditMentorModal" x-cloak @click.self="showEditMentorModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Mentor</h2>
+          <button class="modal-close" @click="showEditMentorModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="editingMentor">
+          <form @submit.prevent="saveMentor">
+            <div class="form-group">
+              <label class="form-label" for="editMentorName">Full Name</label>
+              <input type="text" id="editMentorName" name="name" class="form-input" x-model="editingMentorName" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editMentorEmail">Email</label>
+              <input type="email" id="editMentorEmail" name="email" class="form-input" :value="getEditingMentorEmail()" disabled autocomplete="email">
+              <p class="form-help">Email cannot be changed</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editMentorRole">Role</label>
+              <select id="editMentorRole" name="role" class="form-select" x-model="editingMentorRole">
+                <option value="mentor" :selected="editingMentorRole === 'mentor'">Mentor</option>
+                <option value="admin" :selected="editingMentorRole === 'admin'">Admin</option>
+              </select>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showEditMentorModal = false">Cancel</button>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </template>
+      </div>
+    </div>
+
+    <div class="modal-overlay" x-show="showEditTraineeModal" x-cloak @click.self="showEditTraineeModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Trainee</h2>
+          <button class="modal-close" @click="showEditTraineeModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="editingTrainee">
+          <form @submit.prevent="saveTrainee">
+            <div class="form-group">
+              <label class="form-label" for="editTraineeName">Full Name</label>
+              <input type="text" id="editTraineeName" name="name" class="form-input" x-model="editingTraineeName" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editTraineeEmail">Email</label>
+              <input type="email" id="editTraineeEmail" name="email" class="form-input" x-model="editingTraineeEmail" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Assigned Mentors</label>
+              <div class="mentor-checkbox-list">
+                <template x-for="mentor in $store.app.mentors" :key="mentor.id">
+                  <label class="mentor-checkbox-item" :class="{ 'selected': isMentorSelected(mentor.id, false) }">
+                    <input type="checkbox" :checked="isMentorSelected(mentor.id, false)" @change="toggleMentorSelection(mentor.id, false)">
+                    <span x-text="mentor.name"></span>
+                  </label>
+                </template>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editTraineeStartDate">Start Date</label>
+              <input type="date" id="editTraineeStartDate" name="start_date" class="form-input" x-model="editingTraineeStartDate">
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showEditTraineeModal = false">Cancel</button>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </template>
+      </div>
+    </div>
+
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Confirm Delete</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">
+          Are you sure you want to delete <strong x-text="getDeleteTargetName()"></strong>?
+          This action cannot be undone.
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button type="button" class="btn-danger" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+</body>
+</html>

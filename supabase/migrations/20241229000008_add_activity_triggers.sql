@@ -1,0 +1,11 @@
+CREATE TRIGGER weeks_activity_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON weeks
+  FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER tasks_activity_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON tasks
+  FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER mentors_activity_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON mentors
+  FOR EACH ROW EXECUTE FUNCTION log_activity();

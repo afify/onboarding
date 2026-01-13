@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Task Tracking | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/tracking.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-tracking.js"></script>
+</head>
+<body>
+  <div class="app-layout" x-data="tracking" x-cloak>
+    <main class="main-content">
+      <div class="content-header">
+        <h1 class="content-title">Task Tracking</h1>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="getTotalTasksCount()">0</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon completed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="getStatusCount('done')">0</div>
+            <div class="stat-label">Completed</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon in-progress">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="getStatusCount('in_progress')">0</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blocked">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="getStatusCount('blocked')">0</div>
+            <div class="stat-label">Blocked</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-section">
+        <div class="filter-group">
+          <label class="filter-label" for="filterTrainee">Trainee</label>
+          <select id="filterTrainee" name="trainee" class="filter-select" x-model="filterTrainee">
+            <option value="">All Trainees</option>
+            <template x-for="trainee in $store.app.trainees" :key="trainee.id">
+              <option :value="trainee.id" x-text="trainee.name"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterWeek">Week</label>
+          <select id="filterWeek" name="week" class="filter-select" x-model="filterWeek">
+            <option value="">All Weeks</option>
+            <template x-for="week in $store.app.weeks" :key="week.id">
+              <option :value="week.id" x-text="weekLabel(week.week_number)"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterDay">Day</label>
+          <select id="filterDay" name="day" class="filter-select" x-model="filterDay">
+            <option value="">All Days</option>
+            <template x-for="day in uniqueDays" :key="day">
+              <option :value="day" x-text="dayLabel(day)"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filterStatus">Status</label>
+          <select id="filterStatus" name="status" class="filter-select" x-model="filterStatus">
+            <option value="">All Statuses</option>
+            <template x-for="status in $store.app.statuses" :key="status.id">
+              <option :value="status.id" x-text="status.label"></option>
+            </template>
+          </select>
+        </div>
+
+        <button
+          class="filter-toggle"
+          :class="{ 'active': hideDone }"
+          @click="hideDone = !hideDone"
+          title="Hide completed tasks">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" x-show="hideDone"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" x-show="!hideDone"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" x-show="!hideDone"/>
+          </svg>
+          <span x-text="hideDone ? 'Show Done' : 'Hide Done'"></span>
+        </button>
+
+        <button class="filter-reset" @click="resetFilters" x-show="hasFilters()">
+          Reset Filters
+        </button>
+      </div>
+
+      <div class="tasks-table-container">
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th>Trainee</th>
+              <th>Week</th>
+              <th>Day</th>
+              <th>Task</th>
+              <th>Start Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="item in getFilteredTasks()" :key="item.trainee.id + '-' + item.task.id">
+              <tr>
+                <td>
+                  <div class="trainee-cell">
+                    <div class="trainee-avatar" x-text="getInitials(item.trainee.name)"></div>
+                    <span class="trainee-name" x-text="item.trainee.name"></span>
+                  </div>
+                </td>
+                <td>
+                  <span class="week-badge" x-text="weekLabel(item.weekNumber)"></span>
+                </td>
+                <td>
+                  <span class="day-badge" x-text="dayLabel(item.task.day_number)"></span>
+                </td>
+                <td>
+                  <a href="#" class="task-link" @click.prevent="openTaskDetailModal(item)">
+                    <div class="task-title" x-text="item.task.title"></div>
+                    <div class="task-category" :style="categoryColorStyle(item.task.category_id)" x-text="getCategory(item.task.category_id).label"></div>
+                  </a>
+                </td>
+                <td>
+                  <span class="date-cell" :class="{ 'overdue': isOverdue(item) }" x-text="formatDate(item.startDate)"></span>
+                </td>
+                <td>
+                  <span class="date-cell" :class="{ 'overdue': isOverdue(item), 'due-soon': isDueSoon(item) }" x-text="formatDate(item.dueDate)"></span>
+                </td>
+                <td>
+                  <div class="status-badge" :style="statusBadgeStyle(item.status.color)">
+                    <span class="status-dot" :style="statusDotStyle(item.status.color)"></span>
+                    <span x-text="item.status.label"></span>
+                  </div>
+                </td>
+                <td>
+                  <template x-if="isScorableCategory(item.task.category_id)">
+                    <span class="score-cell" :class="{ 'has-score': item.score }" x-text="scoreLabel(item.score)"></span>
+                  </template>
+                  <template x-if="!isScorableCategory(item.task.category_id)">
+                    <span class="score-cell na">N/A</span>
+                  </template>
+                </td>
+                <td>
+                  <span class="duration-cell" :class="getDurationStatus(item)" x-text="formatDuration(item)"></span>
+                </td>
+                <td>
+                  <button class="btn-edit" @click="openEditModal(item)" title="Edit progress">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <div class="empty-state" x-show="getFilteredTasks().length === 0">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+          <p class="empty-text" x-text="emptyStateText()"></p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Task Details Modal -->
+    <div class="modal-overlay" x-show="showTaskDetailModal" x-cloak @click.self="showTaskDetailModal = false">
+      <div class="modal-content wide" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Task Details</h2>
+          <button class="modal-close" @click="showTaskDetailModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="detailItem">
+          <div class="task-detail-content">
+            <div class="task-detail-header">
+              <h3 class="task-detail-title" x-text="detailItem.task.title"></h3>
+              <div class="task-detail-meta">
+                <span class="task-detail-category" :style="categoryColorStyle(detailItem.task.category_id)" x-text="getCategory(detailItem.task.category_id).label"></span>
+                <span class="task-detail-badge" x-text="weekLabel(detailItem.weekNumber)"></span>
+                <span class="task-detail-badge" x-text="dayLabel(detailItem.task.day_number)"></span>
+              </div>
+            </div>
+
+            <div class="task-detail-description" x-show="detailItem.task.description">
+              <h4 class="task-detail-section-title">Description</h4>
+              <p class="task-detail-description-text" x-text="formatDescription(detailItem.task.description)"></p>
+            </div>
+
+            <div class="task-detail-grid">
+              <div class="task-detail-card">
+                <h4 class="task-detail-card-title">Trainee</h4>
+                <div class="task-detail-trainee">
+                  <div class="trainee-avatar" x-text="getInitials(detailItem.trainee.name)"></div>
+                  <span x-text="detailItem.trainee.name"></span>
+                </div>
+              </div>
+
+              <div class="task-detail-card">
+                <h4 class="task-detail-card-title">Status</h4>
+                <div class="status-badge" :style="statusBadgeStyle(detailItem.status.color)">
+                  <span class="status-dot" :style="statusDotStyle(detailItem.status.color)"></span>
+                  <span x-text="detailItem.status.label"></span>
+                </div>
+              </div>
+
+              <div class="task-detail-card" x-show="isScorableCategory(detailItem.task.category_id)">
+                <h4 class="task-detail-card-title">Score</h4>
+                <div class="task-detail-score" x-text="scoreLabel(detailItem.score)"></div>
+              </div>
+
+              <div class="task-detail-card">
+                <h4 class="task-detail-card-title">Duration</h4>
+                <div class="task-detail-duration" x-text="formatDuration(detailItem)"></div>
+              </div>
+            </div>
+
+            <div class="task-detail-dates">
+              <div class="task-detail-date-item">
+                <span class="task-detail-date-label">Start Date</span>
+                <span class="task-detail-date-value" x-text="formatDate(detailItem.startDate)"></span>
+              </div>
+              <div class="task-detail-date-item">
+                <span class="task-detail-date-label">Due Date</span>
+                <span class="task-detail-date-value" :class="{ 'overdue': isOverdue(detailItem), 'due-soon': isDueSoon(detailItem) }" x-text="formatDate(detailItem.dueDate)"></span>
+              </div>
+              <div class="task-detail-date-item" x-show="detailItem.updatedAt">
+                <span class="task-detail-date-label">Last Updated</span>
+                <span class="task-detail-date-value" x-text="formatDateTime(detailItem.updatedAt)"></span>
+              </div>
+              <div class="task-detail-date-item" x-show="detailItem.updatedBy">
+                <span class="task-detail-date-label">Updated By</span>
+                <span class="task-detail-date-value mentor-name" x-text="detailItem.updatedBy"></span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showTaskDetailModal = false">Close</button>
+              <button type="button" class="btn-primary" @click="editFromDetail()">Edit Progress</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Edit Progress Modal -->
+    <div class="modal-overlay" x-show="showEditModal" x-cloak @click.self="showEditModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Edit Task Progress</h2>
+          <button class="modal-close" @click="showEditModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="editingItem">
+          <div>
+            <div class="form-info">
+              <div class="form-info-row">
+                <span class="form-info-label">Trainee</span>
+                <span class="form-info-value" x-text="editingItem.trainee.name"></span>
+              </div>
+              <div class="form-info-row">
+                <span class="form-info-label">Task</span>
+                <span class="form-info-value" x-text="editingItem.task.title"></span>
+              </div>
+              <div class="form-info-row">
+                <span class="form-info-label">Week</span>
+                <span class="form-info-value" x-text="weekLabel(editingItem.weekNumber)"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <div class="status-select" @click="handleStatusClick($event)">
+                <template x-for="status in $store.app.statuses" :key="status.id">
+                  <div class="status-option" :class="isStatusSelected(status.id)" :data-status-id="status.id">
+                    <span class="status-dot" :style="'background: ' + status.color"></span>
+                    <span x-text="status.label"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="score-section" x-show="isScorableCategory(editingItem.task.category_id)">
+              <label class="score-section-title" for="editFormScore">Score (1-10)</label>
+              <div class="score-input">
+                <input type="range" id="editFormScore" name="score" class="score-range" min="1" max="10" step="1" x-model="editFormScore">
+                <span class="score-value" x-text="scoreLabel(editFormScore)"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="editFormDurationMinutes">Duration (minutes)</label>
+              <input type="number" id="editFormDurationMinutes" name="duration_minutes" class="form-input" x-model="editFormDurationMinutes" min="1" placeholder="e.g., 90 for 1h 30m">
+              <p class="form-help" x-show="editFormDurationMinutes" x-text="durationHelpText()"></p>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="editFormStartDate">Start Date</label>
+                <input type="date" id="editFormStartDate" name="start_date" class="form-input" x-model="editFormStartDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="editFormDueDate">Due Date</label>
+                <input type="date" id="editFormDueDate" name="due_date" class="form-input" x-model="editFormDueDate">
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showEditModal = false">Cancel</button>
+              <button type="button" class="btn-primary" @click="saveProgress">Save</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
