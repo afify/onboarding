@@ -2,6 +2,14 @@
 
 A web application for tracking trainee onboarding progress.
 
+## Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Task Tracking
+![Task Tracking](screenshots/tracking.png)
+
 ## Features
 
 - **Dashboard**: Overview of all trainees and their progress
