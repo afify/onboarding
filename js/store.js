@@ -40,6 +40,13 @@ export function initStore(Alpine) {
     activityLog: [],
     dataReady: false,
 
+    // Interview Pipeline Data
+    interviewStages: [],
+    stageCriteria: [],
+    candidates: [],
+    interviews: [],
+    interviewScores: [],
+
     async initAuth() {
       if (authPromise) return authPromise;
       if (this.authReady) return;
@@ -95,6 +102,13 @@ export function initStore(Alpine) {
         this.progress.splice(0, this.progress.length, ...(data.progress || []));
         this.activityLog.splice(0, this.activityLog.length, ...(data.activity_log || []));
 
+        // Interview Pipeline Data
+        this.interviewStages.splice(0, this.interviewStages.length, ...(data.interview_stages || []));
+        this.stageCriteria.splice(0, this.stageCriteria.length, ...(data.stage_criteria || []));
+        this.candidates.splice(0, this.candidates.length, ...(data.candidates || []));
+        this.interviews.splice(0, this.interviews.length, ...(data.interviews || []));
+        this.interviewScores.splice(0, this.interviewScores.length, ...(data.interview_scores || []));
+
         this.dataReady = true;
       })();
 
@@ -144,6 +158,32 @@ export function initStore(Alpine) {
     async refreshProgress() {
       const { data } = await supabase.from('progress').select('*');
       this.progress = data || [];
+    },
+
+    // Interview Pipeline Refresh Methods
+    async refreshInterviewStages() {
+      const { data } = await supabase.from('interview_stages').select('*').eq('is_active', true).order('sort_order');
+      this.interviewStages.splice(0, this.interviewStages.length, ...(data || []));
+    },
+
+    async refreshStageCriteria() {
+      const { data } = await supabase.from('stage_criteria').select('*').order('stage_id').order('sort_order');
+      this.stageCriteria.splice(0, this.stageCriteria.length, ...(data || []));
+    },
+
+    async refreshCandidates() {
+      const { data } = await supabase.from('candidates').select('*').eq('status', 'active').order('created_at', { ascending: false });
+      this.candidates.splice(0, this.candidates.length, ...(data || []));
+    },
+
+    async refreshInterviews() {
+      const { data } = await supabase.from('interviews').select('*').order('created_at', { ascending: false });
+      this.interviews.splice(0, this.interviews.length, ...(data || []));
+    },
+
+    async refreshInterviewScores() {
+      const { data } = await supabase.from('interview_scores').select('*');
+      this.interviewScores.splice(0, this.interviewScores.length, ...(data || []));
     },
   });
 }

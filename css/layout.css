@@ -32,6 +32,15 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--spacing-lg);
+  flex-wrap: nowrap;
+  gap: var(--spacing-md);
+}
+
+.content-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .content-title {

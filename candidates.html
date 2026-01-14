@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Candidates | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/tracking.css">
+  <link rel="stylesheet" href="/css/interviews.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-candidates.js"></script>
+</head>
+<body>
+  <div class="app-layout" x-data="candidatesPage" x-cloak>
+    <main class="main-content">
+      <div class="content-header">
+        <h1 class="content-title">Candidates</h1>
+        <div class="content-actions">
+          <button class="btn-primary" @click="openAddCandidateModal">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Candidate
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" :class="alert.type" x-show="alert.show" x-cloak x-transition>
+        <span x-text="alert.message"></span>
+        <button class="alert-close" @click="alert.show = false">&times;</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon cyan">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="activeCandidates.length"></div>
+            <div class="stat-label">Active</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="hiredCandidates.length"></div>
+            <div class="stat-label">Hired</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="rejectedCandidates.length"></div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon violet">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="candidates.length"></div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label class="filter-label" for="statusFilter">Status</label>
+          <select id="statusFilter" class="filter-select" x-model="statusFilter">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="hired">Hired</option>
+            <option value="rejected">Rejected</option>
+            <option value="withdrawn">Withdrawn</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="stageFilter">Stage</label>
+          <select id="stageFilter" class="filter-select" x-model="stageFilter">
+            <option value="">All Stages</option>
+            <option value="unassigned">Unassigned</option>
+            <template x-for="stage in interviewStages" :key="stage.id">
+              <option :value="stage.id" x-text="stage.label"></option>
+            </template>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="searchQuery">Search</label>
+          <input type="text" id="searchQuery" class="filter-input" x-model="searchQuery" placeholder="Name, email, position...">
+        </div>
+      </div>
+
+      <!-- Candidates Table -->
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Position</th>
+              <th>Stage</th>
+              <th>Status</th>
+              <th>Interviews</th>
+              <th>Added</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="candidate in filteredCandidates" :key="candidate.id">
+              <tr>
+                <td>
+                  <div class="candidate-info">
+                    <div class="avatar small" :style="'background: ' + getAvatarColor(candidate.name)">
+                      <span x-text="getInitials(candidate.name)"></span>
+                    </div>
+                    <div>
+                      <strong x-text="candidate.name"></strong>
+                      <div class="text-muted small" x-text="candidate.email || 'No email'"></div>
+                    </div>
+                  </div>
+                </td>
+                <td x-text="candidate.position_applied || '-'"></td>
+                <td>
+                  <span class="stage-badge small"
+                        :style="candidate.current_stage_id ? 'background: ' + getStageColor(candidate.current_stage_id) + '20; color: ' + getStageColor(candidate.current_stage_id) : ''"
+                        x-text="candidate.current_stage_id ? getStageName(candidate.current_stage_id) : 'Unassigned'">
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge" :class="'status-' + candidate.status" x-text="formatStatus(candidate.status)"></span>
+                </td>
+                <td x-text="getInterviewCount(candidate.id)"></td>
+                <td x-text="formatDate(candidate.created_at)"></td>
+                <td class="actions-cell">
+                  <button class="btn-icon" @click="openViewModal(candidate)" title="View">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" @click="openEditModal(candidate)" title="Edit">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon danger" @click="confirmDelete(candidate)" title="Delete" x-show="candidate.status !== 'hired'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <div class="empty-state" x-show="filteredCandidates.length === 0">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <p class="empty-text">No candidates found.</p>
+          <p class="empty-subtext">Add your first candidate to get started.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Add/Edit Candidate Modal -->
+    <div class="modal-overlay" x-show="showCandidateModal" x-cloak @click.self="showCandidateModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title" x-text="getModalTitle()"></h2>
+          <button class="modal-close" @click="showCandidateModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveCandidate">
+          <div class="form-group">
+            <label class="form-label" for="candidateName">Name *</label>
+            <input type="text" id="candidateName" class="form-input" x-model="candidateName" required placeholder="Full name">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="candidateEmail">Email</label>
+              <input type="email" id="candidateEmail" class="form-input" x-model="candidateEmail" placeholder="email@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="candidatePhone">Phone</label>
+              <input type="tel" id="candidatePhone" class="form-input" x-model="candidatePhone" placeholder="+1 234 567 8900">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="candidatePosition">Position</label>
+              <input type="text" id="candidatePosition" class="form-input" x-model="candidatePosition" placeholder="e.g., Backend Developer">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="candidateStage">Initial Stage</label>
+              <select id="candidateStage" class="form-select" x-model="candidateStageId">
+                <option value="">-- Unassigned --</option>
+                <template x-for="stage in interviewStages" :key="stage.id">
+                  <option :value="stage.id" x-text="stage.label"></option>
+                </template>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="candidateResume">Resume</label>
+            <input type="file" id="candidateResume" class="form-input" @change="handleResumeUpload" accept=".pdf,.doc,.docx">
+            <span class="form-hint" x-show="hasEditingCandidateResume()">Current: <span x-text="getEditingCandidateResumePath()"></span></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="candidateNotes">Notes</label>
+            <textarea id="candidateNotes" class="form-textarea" x-model="candidateNotes" rows="3" placeholder="Additional notes..."></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="showCandidateModal = false">Cancel</button>
+            <button type="submit" class="btn-primary" x-text="getSubmitButtonText()"></button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- View Candidate Modal -->
+    <div class="modal-overlay" x-show="showViewModal" x-cloak @click.self="showViewModal = false">
+      <div class="modal-content large" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Candidate Details</h2>
+          <button class="modal-close" @click="showViewModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="viewCandidate">
+          <div class="candidate-detail">
+            <div class="detail-header">
+              <div class="avatar large" :style="'background: ' + getAvatarColor(viewCandidate.name)">
+                <span x-text="getInitials(viewCandidate.name)"></span>
+              </div>
+              <div class="detail-info">
+                <h3 x-text="viewCandidate.name"></h3>
+                <p class="text-muted" x-text="viewCandidate.position_applied || 'No position specified'"></p>
+                <div class="detail-meta">
+                  <span class="status-badge" :class="'status-' + viewCandidate.status" x-text="formatStatus(viewCandidate.status)"></span>
+                  <span class="stage-badge small"
+                        :style="viewCandidate.current_stage_id ? 'background: ' + getStageColor(viewCandidate.current_stage_id) + '20; color: ' + getStageColor(viewCandidate.current_stage_id) : ''"
+                        x-text="viewCandidate.current_stage_id ? getStageName(viewCandidate.current_stage_id) : 'Unassigned'">
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Email</label>
+                <p x-text="viewCandidate.email || '-'"></p>
+              </div>
+              <div class="detail-item">
+                <label>Phone</label>
+                <p x-text="viewCandidate.phone || '-'"></p>
+              </div>
+              <div class="detail-item">
+                <label>Added</label>
+                <p x-text="formatDate(viewCandidate.created_at)"></p>
+              </div>
+              <div class="detail-item">
+                <label>Last Updated</label>
+                <p x-text="formatDate(viewCandidate.updated_at)"></p>
+              </div>
+            </div>
+
+            <div class="detail-section" x-show="viewCandidate.resume_path">
+              <h4>Resume</h4>
+              <button class="btn-secondary small" @click="downloadResume(viewCandidate)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Download Resume
+              </button>
+            </div>
+
+            <div class="detail-section" x-show="viewCandidate.notes">
+              <h4>Notes</h4>
+              <p class="notes-text" x-text="viewCandidate.notes"></p>
+            </div>
+
+            <div class="detail-section">
+              <h4>Interview History</h4>
+              <div class="interview-history">
+                <template x-for="interview in getCandidateInterviews(viewCandidate.id)" :key="interview.id">
+                  <div class="interview-item">
+                    <div class="interview-item-header">
+                      <span class="stage-badge small"
+                            :style="'background: ' + getStageColor(interview.stage_id) + '20; color: ' + getStageColor(interview.stage_id)"
+                            x-text="getStageName(interview.stage_id)">
+                      </span>
+                      <span class="interview-decision" :class="'decision-' + interview.decision" x-text="formatDecision(interview.decision)"></span>
+                    </div>
+                    <div class="interview-item-meta">
+                      <span>Score: <strong x-text="interview.overall_score || '-'"></strong></span>
+                      <span>By: <span x-text="getMentorName(interview.interviewer_id)"></span></span>
+                      <span x-text="formatDate(interview.completed_at || interview.created_at)"></span>
+                    </div>
+                    <p class="interview-notes" x-show="interview.notes" x-text="interview.notes"></p>
+                  </div>
+                </template>
+                <p class="empty-text small" x-show="getCandidateInterviews(viewCandidate.id).length === 0">No interviews yet.</p>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showViewModal = false">Close</button>
+              <button type="button" class="btn-primary" @click="openEditFromView">Edit</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content small" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Delete Candidate</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p class="modal-message">Are you sure you want to delete "<span x-text="getDeleteTargetName()"></span>"? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button type="button" class="btn-danger" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

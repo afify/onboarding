@@ -28,6 +28,10 @@
   max-width: 560px;
 }
 
+.modal-content.extra-wide {
+  max-width: 1150px;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -239,6 +243,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
@@ -258,6 +263,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn-secondary:hover {
@@ -516,6 +522,12 @@
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.stat-icon.red {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
 }
 
 .stat-data {

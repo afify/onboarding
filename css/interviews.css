@@ -1,0 +1,1111 @@
+/* Tabs */
+.tabs-container {
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+.tab svg {
+  opacity: 0.7;
+}
+
+.tab.active svg {
+  opacity: 1;
+}
+
+.tab-content {
+  padding-top: 1rem;
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-header .section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.section-header .btn-primary,
+.section-header .btn-secondary {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-actions .btn-primary,
+.section-actions .btn-secondary {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Data Table */
+.data-table-container {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.data-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--glass-border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.375rem;
+}
+
+/* Color Dot */
+.color-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+/* Text utilities */
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Inline select for filters */
+.inline-select {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.inline-select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  color: var(--text-subtle);
+}
+
+.empty-text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.empty-subtext {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Stage badge small variant */
+.stage-badge.small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+}
+
+/* Form elements for modals */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Kanban Container */
+.kanban-container {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  min-height: 400px;
+}
+
+.kanban-column {
+  flex: 0 0 280px;
+  min-width: 280px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+  transition: all var(--transition-fast);
+}
+
+.kanban-column.unassigned {
+  background: rgba(107, 114, 128, 0.05);
+}
+
+.kanban-column.drag-over {
+  border-color: var(--accent-cyan);
+  background: rgba(34, 211, 238, 0.05);
+}
+
+.kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.kanban-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.stage-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kanban-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.kanban-cards {
+  flex: 1;
+  padding: 0.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Candidate Cards */
+.candidate-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+  cursor: grab;
+  transition: all var(--transition-fast);
+}
+
+.candidate-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.candidate-card.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.candidate-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.candidate-position {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.candidate-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+}
+
+.candidate-tag {
+  font-size: 0.625rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  color: var(--text-subtle);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-tag.interview-count {
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent-cyan);
+}
+
+.candidate-actions {
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.btn-icon.primary {
+  background: rgba(34, 211, 238, 0.1);
+  border-color: rgba(34, 211, 238, 0.2);
+  color: var(--accent-cyan);
+}
+
+.btn-icon.primary:hover {
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.btn-icon.danger {
+  color: var(--status-blocked);
+}
+
+.btn-icon.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Candidate Detail Modal */
+.candidate-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.candidate-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.candidate-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.candidate-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-detail-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.candidate-detail-position {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.candidate-detail-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+.candidate-detail-stage {
+  flex-shrink: 0;
+}
+
+.stage-badge {
+  display: inline-flex;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.candidate-detail-notes p,
+.candidate-detail-resume {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Interview History List */
+.interviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.interview-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.interview-item.decision-pass {
+  border-left: 3px solid var(--status-completed);
+}
+
+.interview-item.decision-fail {
+  border-left: 3px solid var(--status-blocked);
+}
+
+.interview-item.decision-pending {
+  border-left: 3px solid var(--status-in-progress);
+}
+
+.interview-stage {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.interview-meta {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  display: flex;
+  gap: 0.75rem;
+}
+
+.interview-score {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.interview-decision {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+.interview-decision.pass {
+  color: var(--status-completed);
+}
+
+.interview-decision.fail {
+  color: var(--status-blocked);
+}
+
+.interview-decision.pending {
+  color: var(--status-in-progress);
+}
+
+/* Conduct Interview Modal */
+.criteria-section {
+  margin-bottom: 1.5rem;
+}
+
+.criteria-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .criteria-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .criteria-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.criteria-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.criteria-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.criteria-description {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  margin-bottom: 0.75rem;
+}
+
+.criteria-score {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.score-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+}
+
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.score-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.score-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.score-display {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  min-width: 40px;
+  text-align: right;
+}
+
+.no-criteria-message {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.no-criteria-message p {
+  margin-bottom: 0.5rem;
+}
+
+.no-criteria-message p:last-child {
+  margin-bottom: 0;
+}
+
+/* Decision Buttons */
+.decision-section {
+  margin-bottom: 1rem;
+}
+
+.decision-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.decision-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.decision-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.decision-btn.pass.selected {
+  border-color: var(--status-completed);
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--status-completed);
+}
+
+.decision-btn.pending.selected {
+  border-color: var(--status-in-progress);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--status-in-progress);
+}
+
+.decision-btn.fail.selected {
+  border-color: var(--status-blocked);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--status-blocked);
+}
+
+/* Stage Configuration */
+.config-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.75rem;
+}
+
+.config-tab {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.config-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.config-tab.active {
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent-cyan);
+}
+
+.config-content {
+  min-height: 300px;
+}
+
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: grab;
+}
+
+.config-item:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.config-item-handle {
+  color: var(--text-subtle);
+  cursor: grab;
+}
+
+.config-item-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.config-item-label {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.config-item-count,
+.config-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+.config-item-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.config-add-form {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.config-add-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.color-input {
+  width: 48px;
+  height: 48px;
+  padding: 2px;
+  background: none;
+  border-radius: var(--radius-md);
+}
+
+/* File Input */
+.file-input {
+  padding: 0.5rem;
+}
+
+.file-input::file-selector-button {
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.file-input::file-selector-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Delete Modal */
+.modal-content.small {
+  max-width: 360px;
+}
+
+.modal-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+/* Empty state adjustments for interviews page */
+.empty-state {
+  margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .kanban-container {
+    flex-direction: column;
+  }
+
+  .kanban-column {
+    flex: none;
+    min-width: auto;
+    max-height: none;
+  }
+
+  .decision-group {
+    flex-direction: column;
+  }
+
+  .candidate-detail-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .candidate-detail-stage {
+    align-self: center;
+  }
+}
+
+/* =====================================================
+   INTERVIEW REPORT STYLES
+   ===================================================== */
+
+/* Report Modal */
+.report-modal {
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.report-content {
+  padding: 1.5rem;
+  background: white;
+  color: #1a1a2e;
+  border-radius: var(--radius-md);
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--accent-cyan);
+}
+
+.report-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.5rem;
+}
+
+.report-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Candidate Info */
+.report-candidate-info {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+}
+
+.report-candidate-info h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-size: 0.9375rem;
+  color: #1a1a2e;
+}
+
+/* Stage Section */
+.report-stage-section {
+  margin-bottom: 2rem;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.stage-header-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+}
+
+.stage-header-bar h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.stage-meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  opacity: 0.9;
+}
+
+/* Criteria Scores Table */
+.criteria-scores-table {
+  padding: 0;
+}
+
+.criteria-scores-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.criteria-scores-table th,
+.criteria-scores-table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.875rem;
+}
+
+.criteria-scores-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.criteria-scores-table tr:last-child td {
+  border-bottom: none;
+}
+
+.criteria-scores-table .score-cell {
+  font-weight: 600;
+  color: #00a8cc;
+}
+
+.criteria-scores-table .notes-cell {
+  color: #666;
+  font-size: 0.8125rem;
+  max-width: 200px;
+}
+
+.criteria-scores-table .total-row {
+  background: #f8f9fa;
+}
+
+.criteria-scores-table .total-row td {
+  border-top: 2px solid #00d4ff;
+  font-weight: 600;
+}
+
+.weight-negative {
+  color: #dc3545;
+}
+
+/* Decision Badge */
+.decision-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.decision-pass {
+  background: rgba(16, 185, 129, 0.2);
+  color: #059669;
+}
+
+.decision-fail {
+  background: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+.decision-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+/* Stage Notes */
+.stage-notes {
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.stage-notes h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.stage-notes p {
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* No Interviews */
+.no-interviews {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+}
+
+/* Print Styles */
+@media print {
+  body:not(.printing-report) * {
+    visibility: hidden;
+  }
+
+  body.printing-report .report-modal-overlay,
+  body.printing-report .report-modal,
+  body.printing-report .report-content,
+  body.printing-report .report-content * {
+    visibility: visible;
+  }
+
+  body.printing-report .report-modal-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: white;
+  }
+
+  body.printing-report .report-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    max-width: none;
+    max-height: none;
+    box-shadow: none;
+    border: none;
+    margin: 0;
+  }
+
+  body.printing-report .no-print {
+    display: none !important;
+  }
+
+  body.printing-report .report-content {
+    padding: 0;
+  }
+
+  body.printing-report .report-stage-section {
+    page-break-inside: avoid;
+  }
+}

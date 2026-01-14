@@ -72,6 +72,28 @@
   color: var(--text-primary);
 }
 
+.filter-input {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  outline: none;
+  min-width: 180px;
+  transition: all var(--transition-fast);
+}
+
+.filter-input:focus {
+  border-color: var(--accent-cyan);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.filter-input::placeholder {
+  color: var(--text-muted);
+}
+
 .filter-reset {
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.05);
