@@ -1,5 +1,11 @@
 import { supabase } from './supabase-client.js';
 import { isValidEmail, isValidName, sanitizeInput } from './security.js';
+import {
+  colors,
+  addHeader,
+  addFooterToAllPages,
+  checkPageBreak as pdfCheckPageBreak
+} from './pdf-template.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('interviewsPage', () => ({
@@ -1069,151 +1075,228 @@ document.addEventListener('alpine:init', () => {
       const doc = new window.jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
 
-      // Colors
-      const colors = {
-        primary: [15, 23, 42],
-        accent: [20, 184, 166],
-        cyan: [0, 212, 255],
-        textDark: [30, 41, 59],
-        textMuted: [100, 116, 139],
-        white: [255, 255, 255],
-        pass: [16, 185, 129],
-        fail: [239, 68, 68],
-        pending: [107, 114, 128]
-      };
+      // Calculate overall totals upfront
+      const overallWeighted = data.stages.reduce((sum, s) => sum + s.totalWeightedScore, 0);
+      const overallMax = data.stages.reduce((sum, s) => sum + s.maxPossibleScore, 0);
+      const overallPercentage = overallMax > 0 ? Math.round((overallWeighted / overallMax) * 100) : 0;
 
-      // === HEADER BANNER ===
-      const bannerHeight = 28;
-      doc.setFillColor(...colors.primary);
-      doc.rect(0, 0, pageWidth, bannerHeight, 'F');
-      doc.setFillColor(...colors.accent);
-      doc.rect(0, bannerHeight - 2, pageWidth, 2, 'F');
+      // Use template header with Current Stage included
+      let y = addHeader(doc, {
+        subtitle: 'INTERVIEW ASSESSMENT REPORT',
+        rightTitle: data.candidate.name,
+        rightSubtitle: 'Stage: ' + data.candidate.currentStage,
+        rightInfo: data.candidate.position
+      });
 
-      doc.setTextColor(...colors.white);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('INTERVIEW REPORT', margin, 12);
-      doc.setFontSize(8);
+      // Remove extra space from header
+      y -= 8;
+
+      // === ASSESSMENT SUMMARY CARD (with total) ===
+      const totalStages = data.stages.length;
+      const passedStages = data.stages.filter(s => s.decision === 'pass').length;
+      const failedStages = data.stages.filter(s => s.decision === 'fail').length;
+      const pendingStages = totalStages - passedStages - failedStages;
+
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.roundedRect(margin, y, contentWidth, 16, 2, 2, 'FD');
+
+      const summaryY = y + 10;
+
+      // Inline format: Label: Value
+      doc.setFontSize(10);
+
+      // Stages
+      doc.setTextColor(...colors.textMuted);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(180, 190, 200);
-      doc.text('CANDIDATE ASSESSMENT', margin, 20);
-
-      const generatedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      doc.setTextColor(...colors.white);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(data.candidate.name, pageWidth - margin, 9, { align: 'right' });
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(180, 190, 200);
-      doc.text('Generated: ' + generatedDate, pageWidth - margin, 16, { align: 'right' });
-      doc.text(data.candidate.position, pageWidth - margin, 22, { align: 'right' });
-
-      let y = bannerHeight + 12;
-
-      // === CANDIDATE INFO CARD ===
-      doc.setFillColor(248, 250, 252);
-      doc.roundedRect(margin, y, pageWidth - margin * 2, 16, 3, 3, 'F');
-
+      doc.text('Stages:', margin + 6, summaryY);
       doc.setTextColor(...colors.textDark);
-      doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
-      doc.text('Current Stage:', margin + 5, y + 7);
+      doc.text(totalStages.toString(), margin + 28, summaryY);
+
+      // Passed
+      doc.setTextColor(...colors.textMuted);
       doc.setFont('helvetica', 'normal');
-      doc.text(data.candidate.currentStage, margin + 35, y + 7);
+      doc.text('Passed:', margin + 42, summaryY);
+      doc.setTextColor(...colors.success);
+      doc.setFont('helvetica', 'bold');
+      doc.text(passedStages.toString(), margin + 66, summaryY);
 
-      if (data.candidate.email) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Email:', margin + 5, y + 13);
-        doc.setFont('helvetica', 'normal');
-        doc.text(data.candidate.email, margin + 18, y + 13);
-      }
+      // Failed
+      doc.setTextColor(...colors.textMuted);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Failed:', margin + 80, summaryY);
+      doc.setTextColor(...colors.danger);
+      doc.setFont('helvetica', 'bold');
+      doc.text(failedStages.toString(), margin + 100, summaryY);
 
-      y += 22;
+      // Pending
+      doc.setTextColor(...colors.textMuted);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Pending:', margin + 108, summaryY);
+      doc.setTextColor(...colors.warning);
+      doc.setFont('helvetica', 'bold');
+      doc.text(pendingStages.toString(), margin + 130, summaryY);
+
+      // Total Score (right aligned)
+      doc.setTextColor(...colors.textMuted);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Total:', pageWidth - margin - 45, summaryY);
+      doc.setTextColor(...colors.cyan);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${overallWeighted.toFixed(0)}/${overallMax.toFixed(0)} (${overallPercentage}%)`, pageWidth - margin - 6, summaryY, { align: 'right' });
+
+      y += 20;
 
       // === STAGE REPORTS ===
       for (const stage of data.stages) {
-        if (y > 250) {
-          doc.addPage();
-          y = 20;
-        }
+        // Estimate height needed for this stage (tight estimate)
+        const criteriaHeight = stage.criteria ? stage.criteria.length * 6 + 14 : 0;
+        const notesHeight = stage.notes ? 14 : 0;
+        const stageHeight = 24 + criteriaHeight + notesHeight;
 
-        // Stage header
+        y = pdfCheckPageBreak(doc, y, stageHeight, 12);
+
+        // Stage header bar with interviewer info inline
+        const stageDate = stage.date ? new Date(stage.date).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        }) : 'N/A';
+        const interviewerText = `${stage.interviewer} • ${stageDate}`;
+
+        const statusColor = stage.decision === 'pass' ? colors.success :
+                            stage.decision === 'fail' ? colors.danger : colors.warning;
+
+        // Dark header bar
         doc.setFillColor(...colors.primary);
-        doc.roundedRect(margin, y, pageWidth - margin * 2, 10, 2, 2, 'F');
+        doc.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
+
+        // Status indicator stripe on left
+        doc.setFillColor(...statusColor);
+        doc.rect(margin, y, 3, 12, 'F');
+
+        // Stage title + Interviewer info (next to each other)
         doc.setTextColor(...colors.white);
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text(stage.stageName, margin + 4, y + 7);
+        doc.text(stage.stageName, margin + 8, y + 8);
 
-        const decisionColor = stage.decision === 'pass' ? colors.pass : stage.decision === 'fail' ? colors.fail : colors.pending;
-        doc.setTextColor(...decisionColor);
-        doc.text((stage.decision || 'pending').toUpperCase(), pageWidth - margin - 4, y + 7, { align: 'right' });
-
-        y += 14;
-
-        // Interviewer info
-        doc.setTextColor(...colors.textMuted);
+        const stageNameWidth = doc.getTextWidth(stage.stageName);
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
-        const stageDate = stage.date ? new Date(stage.date).toLocaleDateString() : 'N/A';
-        doc.text(`Interviewer: ${stage.interviewer} | Date: ${stageDate}`, margin, y);
-        y += 6;
+        doc.setTextColor(180, 190, 200);
+        doc.text(interviewerText, margin + 12 + stageNameWidth, y + 8);
+
+        // Status badge on right
+        const statusText = (stage.decision || 'pending').toUpperCase();
+        doc.setFillColor(...statusColor);
+        const badgeWidth = doc.getTextWidth(statusText) + 6;
+        doc.roundedRect(pageWidth - margin - badgeWidth - 3, y + 2.5, badgeWidth, 7, 2, 2, 'F');
+        doc.setTextColor(...colors.white);
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'bold');
+        doc.text(statusText, pageWidth - margin - badgeWidth / 2 - 3, y + 7, { align: 'center' });
+
+        y += 14;
 
         // Criteria table
         if (stage.criteria && stage.criteria.length > 0) {
           // Table header
-          doc.setFillColor(240, 240, 245);
-          doc.rect(margin, y, pageWidth - margin * 2, 6, 'F');
-          doc.setTextColor(...colors.textDark);
+          doc.setFillColor(...colors.lightBg);
+          doc.rect(margin, y, contentWidth, 7, 'F');
+          doc.setTextColor(...colors.textMuted);
           doc.setFontSize(7);
           doc.setFont('helvetica', 'bold');
-          doc.text('Criteria', margin + 3, y + 4);
-          doc.text('Weight', pageWidth - margin - 55, y + 4);
-          doc.text('Score', pageWidth - margin - 35, y + 4);
-          doc.text('Total', pageWidth - margin - 10, y + 4, { align: 'right' });
+          doc.text('CRITERIA', margin + 4, y + 5);
+          doc.text('WEIGHT', pageWidth - margin - 60, y + 5);
+          doc.text('SCORE', pageWidth - margin - 35, y + 5);
+          doc.text('TOTAL', pageWidth - margin - 4, y + 5, { align: 'right' });
           y += 8;
 
+          // Table rows
+          let alternate = false;
           for (const c of stage.criteria) {
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(...colors.textDark);
-            doc.text(c.name, margin + 3, y + 3);
-            doc.text(c.weight.toString(), pageWidth - margin - 55, y + 3);
-            doc.text(`${c.score}/${c.maxScore}`, pageWidth - margin - 35, y + 3);
-
-            if (c.weight < 0) {
-              doc.setTextColor(...colors.fail);
-            } else {
-              doc.setTextColor(...colors.cyan);
+            if (alternate) {
+              doc.setFillColor(252, 252, 253);
+              doc.rect(margin, y - 1, contentWidth, 6, 'F');
             }
-            doc.text(c.total.toFixed(1), pageWidth - margin - 10, y + 3, { align: 'right' });
-            y += 5;
+            alternate = !alternate;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.textDark);
+
+            // Truncate long criteria names
+            let criteriaName = c.name;
+            if (doc.getTextWidth(criteriaName) > 85) {
+              while (doc.getTextWidth(criteriaName + '...') > 85) {
+                criteriaName = criteriaName.slice(0, -1);
+              }
+              criteriaName += '...';
+            }
+            doc.text(criteriaName, margin + 4, y + 4);
+
+            // Weight with color indicator
+            const weightText = c.weight > 0 ? `${c.weight}x` : `${c.weight}x`;
+            doc.setTextColor(c.weight < 0 ? colors.danger[0] : colors.textDark[0],
+                            c.weight < 0 ? colors.danger[1] : colors.textDark[1],
+                            c.weight < 0 ? colors.danger[2] : colors.textDark[2]);
+            doc.text(weightText, pageWidth - margin - 60, y + 4);
+
+            doc.setTextColor(...colors.textDark);
+            doc.text(`${c.score}/${c.maxScore}`, pageWidth - margin - 35, y + 4);
+
+            // Total with color based on positive/negative
+            const totalColor = c.total < 0 ? colors.danger : colors.accent;
+            doc.setTextColor(...totalColor);
+            doc.setFont('helvetica', 'bold');
+            doc.text(c.total.toFixed(1), pageWidth - margin - 4, y + 4, { align: 'right' });
+
+            y += 6;
           }
 
           // Total row
-          doc.setFillColor(248, 250, 252);
-          doc.rect(margin, y, pageWidth - margin * 2, 6, 'F');
-          doc.setTextColor(...colors.textDark);
+          doc.setFillColor(...colors.primary);
+          doc.rect(margin, y, contentWidth, 8, 'F');
+          doc.setTextColor(...colors.white);
+          doc.setFontSize(8);
           doc.setFont('helvetica', 'bold');
-          doc.text('TOTAL', margin + 3, y + 4);
-          doc.setTextColor(...colors.cyan);
-          doc.text(`${stage.totalWeightedScore.toFixed(1)} / ${stage.maxPossibleScore.toFixed(1)}`, pageWidth - margin - 10, y + 4, { align: 'right' });
-          y += 10;
+          doc.text('STAGE TOTAL', margin + 4, y + 5.5);
+
+          const percentage = stage.maxPossibleScore > 0
+            ? Math.round((stage.totalWeightedScore / stage.maxPossibleScore) * 100)
+            : 0;
+          doc.text(`${stage.totalWeightedScore.toFixed(1)} / ${stage.maxPossibleScore.toFixed(1)} (${percentage}%)`,
+                   pageWidth - margin - 4, y + 5.5, { align: 'right' });
+          y += 8;
         }
 
-        // Notes
+        // Notes section
         if (stage.notes) {
+          y = pdfCheckPageBreak(doc, y, 14);
+          doc.setFillColor(255, 251, 235);
+          doc.setDrawColor(251, 191, 36);
+          doc.roundedRect(margin, y, contentWidth, 12, 2, 2, 'FD');
+
           doc.setTextColor(...colors.textMuted);
           doc.setFontSize(7);
-          doc.setFont('helvetica', 'italic');
-          const notesLines = doc.splitTextToSize(`Notes: ${stage.notes}`, pageWidth - margin * 2 - 10);
-          doc.text(notesLines, margin + 3, y);
-          y += notesLines.length * 4 + 4;
+          doc.setFont('helvetica', 'bold');
+          doc.text('NOTES', margin + 4, y + 4);
+
+          doc.setTextColor(...colors.textDark);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          const notesLines = doc.splitTextToSize(stage.notes, contentWidth - 10);
+          doc.text(notesLines.slice(0, 2).join(' '), margin + 4, y + 9);
+          y += 14;
         }
 
-        y += 8;
+        y += 2;
       }
+
+      // Add footer to all pages using template
+      addFooterToAllPages(doc, { leftText: 'Confidential - Interview Assessment Report' });
 
       return doc;
     },
@@ -1230,12 +1313,19 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      // Show the styled modal report
-      this.reportData = this.buildReportData(candidate);
-      this.showReportModal = true;
+      try {
+        const data = this.buildReportData(candidate);
+        const doc = this.createPDFDocument(data);
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+      } catch (err) {
+        console.error('PDF generation error:', err);
+        this.showAlert('error', 'Failed to generate PDF');
+      }
     },
 
-    async downloadCandidatePDF(candidate) {
+    downloadCandidatePDF(candidate) {
       if (!candidate) return;
 
       const candidateInterviews = this.interviews.filter(i =>
@@ -1247,55 +1337,14 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      // Build report data and show modal temporarily to capture it
-      this.reportData = this.buildReportData(candidate);
-      this.showReportModal = true;
-
-      // Wait for modal to render, then capture and download
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const reportContent = document.querySelector('.report-content');
-      if (!reportContent) {
-        this.showAlert('error', 'Could not generate PDF');
-        return;
-      }
-
       try {
-        const canvas = await window.html2canvas(reportContent, {
-          scale: 4,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          allowTaint: true,
-          imageTimeout: 0
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new window.jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-
-        const imgWidth = pageWidth - 20;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        let heightLeft = imgHeight;
-        let position = 10;
-
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight + 10;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
+        const data = this.buildReportData(candidate);
+        const doc = this.createPDFDocument(data);
 
         const today = new Date().toISOString().split('T')[0];
         const filename = `${candidate.name.replace(/\s+/g, '_')}_Interview_Report_${today}.pdf`;
-        pdf.save(filename);
+        doc.save(filename);
 
-        this.showReportModal = false;
         this.showAlert('success', 'Report downloaded successfully');
       } catch (err) {
         console.error('PDF generation error:', err);

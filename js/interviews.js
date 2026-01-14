@@ -11,8 +11,8 @@ document.addEventListener('alpine:init', () => {
     // Tab state
     activeTab: 'stages',
 
-    // Filter
-    selectedStageFilter: '',
+    // Expanded stage for criteria grouping
+    expandedStage: null,
 
     // Stage modal
     showStageModal: false,
@@ -96,11 +96,12 @@ document.addEventListener('alpine:init', () => {
       return this.candidates.filter(c => c.current_stage_id === stageId).length;
     },
 
-    get filteredCriteria() {
-      if (!this.selectedStageFilter) {
-        return this.stageCriteria;
-      }
-      return this.stageCriteria.filter(c => c.stage_id === this.selectedStageFilter);
+    getCriteriaForStage(stageId) {
+      return this.stageCriteria.filter(c => c.stage_id === stageId);
+    },
+
+    toggleStage(stageId) {
+      this.expandedStage = this.expandedStage === stageId ? null : stageId;
     },
 
     // Stage modal methods

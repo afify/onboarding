@@ -180,9 +180,6 @@
                   @dragend="handleDragEnd()">
                   <div class="candidate-name" x-text="candidate.name"></div>
                   <div class="candidate-position" x-text="candidate.position_applied || 'No position specified'"></div>
-                  <div class="candidate-meta">
-                    <span class="candidate-tag interview-count" x-text="getInterviewCountText(candidate, stage.id)"></span>
-                  </div>
                   <div class="candidate-actions">
                     <button class="btn-icon" @click="viewCandidatePDF(candidate)" title="View PDF" x-show="hasCompletedInterviews(candidate)">
                       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
