@@ -129,6 +129,7 @@
               <th>Stage</th>
               <th>Status</th>
               <th>Interviews</th>
+              <th>Code</th>
               <th>Added</th>
               <th>Actions</th>
             </tr>
@@ -141,10 +142,7 @@
                     <div class="avatar small" :style="'background: ' + getAvatarColor(candidate.name)">
                       <span x-text="getInitials(candidate.name)"></span>
                     </div>
-                    <div>
-                      <strong x-text="candidate.name"></strong>
-                      <div class="text-muted small" x-text="candidate.email || 'No email'"></div>
-                    </div>
+                    <a href="#" class="candidate-name-link" @click.prevent="openViewModal(candidate)" x-text="candidate.name"></a>
                   </div>
                 </td>
                 <td x-text="candidate.position_applied || '-'"></td>
@@ -158,6 +156,14 @@
                   <span class="status-badge" :class="'status-' + candidate.status" x-text="formatStatus(candidate.status)"></span>
                 </td>
                 <td x-text="getInterviewCount(candidate.id)"></td>
+                <td>
+                  <span x-show="candidate.code_submission_path" class="code-uploaded" title="Code submitted">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </span>
+                  <span x-show="!candidate.code_submission_path" class="text-muted">-</span>
+                </td>
                 <td x-text="formatDate(candidate.created_at)"></td>
                 <td class="actions-cell">
                   <button class="btn-icon" @click="openViewModal(candidate)" title="View">
@@ -315,9 +321,25 @@
               </button>
             </div>
 
+            <div class="detail-section" x-show="viewCandidate.code_submission_path">
+              <h4>Code Submission</h4>
+              <button class="btn-secondary small" @click="downloadCodeSubmission(viewCandidate)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                Download Code
+              </button>
+            </div>
+
             <div class="detail-section" x-show="viewCandidate.notes">
               <h4>Notes</h4>
               <p class="notes-text" x-text="viewCandidate.notes"></p>
+            </div>
+
+            <div class="detail-section rejection-info" x-show="viewCandidate.status === 'rejected' && viewCandidate.rejection_reason">
+              <h4>Rejection Reason</h4>
+              <p class="rejection-reason-text" x-text="viewCandidate.rejection_reason"></p>
+              <p class="rejection-date text-muted small" x-show="viewCandidate.rejected_at" x-text="'Rejected on ' + formatDate(viewCandidate.rejected_at)"></p>
             </div>
 
             <div class="detail-section">
@@ -346,6 +368,12 @@
 
             <div class="modal-actions">
               <button type="button" class="btn-secondary" @click="showViewModal = false">Close</button>
+              <button type="button" class="btn-danger" @click="confirmRejectCandidate(viewCandidate)" x-show="viewCandidate.status === 'active'">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Reject
+              </button>
               <button type="button" class="btn-primary" @click="openEditFromView">Edit</button>
             </div>
           </div>
@@ -369,6 +397,56 @@
           <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
           <button type="button" class="btn-danger" @click="executeDelete">Delete</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Reject Candidate Modal -->
+    <div class="modal-overlay" x-show="showRejectModal" x-cloak @click.self="showRejectModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Reject Candidate</h2>
+          <button class="modal-close" @click="showRejectModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="rejectTarget">
+          <div class="reject-form">
+            <div class="reject-candidate-info">
+              <div class="avatar" :style="'background: ' + getAvatarColor(rejectTarget.name)">
+                <span x-text="getInitials(rejectTarget.name)"></span>
+              </div>
+              <div>
+                <strong x-text="rejectTarget.name"></strong>
+                <p class="text-muted small" x-text="rejectTarget.position_applied || 'No position'"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rejectionReasonCandidates">Rejection Reason *</label>
+              <textarea
+                id="rejectionReasonCandidates"
+                class="form-textarea"
+                x-model="rejectionReason"
+                rows="4"
+                placeholder="Please provide a reason for rejecting this candidate..."
+                required></textarea>
+              <span class="form-hint">This will be recorded for future reference.</span>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showRejectModal = false">Cancel</button>
+              <button type="button" class="btn-danger" @click="executeReject">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Reject Candidate
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>

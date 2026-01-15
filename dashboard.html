@@ -213,53 +213,77 @@
           </div>
         </div>
 
-        <div class="chart-card chart-categories">
+        <div class="chart-card chart-outcomes">
           <div class="chart-header">
-            <h3 class="chart-title">Task Categories</h3>
+            <h3 class="chart-title">Interview Outcomes</h3>
+            <a href="/interview-board.html" class="chart-link">View Board →</a>
           </div>
-          <div class="categories-container">
-            <template x-for="cat in $store.app.categories" :key="cat.id">
-              <div class="category-row">
-                <div class="category-info">
-                  <div class="category-icon" :style="categoryIconStyle(cat.color)">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                    </svg>
-                  </div>
-                  <span class="category-name" x-text="cat.label">Category</span>
-                </div>
-                <div class="category-bar-wrapper">
-                  <div class="category-bar-track">
-                    <div class="category-bar-fill" :style="categoryBarStyle(cat.id, cat.color)"></div>
-                  </div>
-                </div>
-                <div class="category-count" x-text="getCategoryTaskCount(cat.id)">0</div>
+          <div class="outcomes-container">
+            <div class="outcome-stat outcome-hired">
+              <div class="outcome-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
               </div>
-            </template>
+              <div class="outcome-data">
+                <div class="outcome-value" x-text="getHiredCandidatesCount()">0</div>
+                <div class="outcome-label">Hired</div>
+              </div>
+            </div>
+            <div class="outcome-stat outcome-rejected">
+              <div class="outcome-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="outcome-data">
+                <div class="outcome-value" x-text="getRejectedCandidatesCount()">0</div>
+                <div class="outcome-label">Rejected</div>
+              </div>
+            </div>
+            <div class="outcome-stat outcome-pending">
+              <div class="outcome-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="outcome-data">
+                <div class="outcome-value" x-text="getPendingDecisionsCount()">0</div>
+                <div class="outcome-label">Pending</div>
+              </div>
+            </div>
+          </div>
+          <div class="outcomes-bar">
+            <div class="outcomes-bar-segment hired" :style="'width: ' + getOutcomePercent('hired') + '%'" x-show="getHiredCandidatesCount() > 0"></div>
+            <div class="outcomes-bar-segment rejected" :style="'width: ' + getOutcomePercent('rejected') + '%'" x-show="getRejectedCandidatesCount() > 0"></div>
+            <div class="outcomes-bar-segment pending" :style="'width: ' + getOutcomePercent('pending') + '%'" x-show="getPendingDecisionsCount() > 0"></div>
           </div>
         </div>
 
-        <div class="chart-card chart-bars">
+        <div class="chart-card chart-recent-interviews">
           <div class="chart-header">
-            <h3 class="chart-title">Weekly Progress</h3>
-            <div class="chart-actions">
-              <span class="chart-period" x-text="traineesCountLabel()">0 trainees</span>
-            </div>
+            <h3 class="chart-title">Recent Interviews</h3>
+            <a href="/interview-board.html" class="chart-link">View All →</a>
           </div>
-          <div class="bars-container">
-            <template x-for="week in $store.app.weeks.slice(0, 6)" :key="week.id">
-              <div class="bar-group">
-                <div class="bar-wrapper">
-                  <div class="bar-track">
-                    <div class="bar-fill" :style="barFillStyle(week.id)">
-                      <div class="bar-glow"></div>
-                    </div>
+          <div class="recent-interviews-list">
+            <template x-for="interview in getRecentInterviews()" :key="interview.id">
+              <div class="recent-interview-row">
+                <div class="interview-candidate-avatar" x-text="getCandidateInitials(interview.candidate_id)">??</div>
+                <div class="recent-interview-info">
+                  <div class="recent-interview-header">
+                    <span class="recent-interview-candidate" x-text="getCandidateName(interview.candidate_id)">Candidate</span>
+                    <span class="recent-interview-decision" :class="'decision-' + (interview.decision || 'pending')" x-text="formatDecisionShort(interview.decision)">?</span>
+                  </div>
+                  <div class="recent-interview-meta">
+                    <span class="recent-interview-stage" x-text="getInterviewStageName(interview.stage_id)">Stage</span>
+                    <span class="recent-interview-score" x-show="interview.overall_score" x-text="'Score: ' + interview.overall_score"></span>
                   </div>
                 </div>
-                <div class="bar-label" x-text="weekLabel(week.week_number)">W1</div>
-                <div class="bar-value" x-text="weekCompletionLabel(week.id)">0%</div>
               </div>
             </template>
+            <div class="empty-state-sm" x-show="interviews.length === 0">
+              <p>No interviews yet</p>
+            </div>
           </div>
         </div>
       </div>
@@ -307,6 +331,58 @@
           <div class="quick-stat-content">
             <div class="quick-stat-value" x-text="getBlockedCount()">0</div>
             <div class="quick-stat-label">Blocked Tasks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interview Pipeline Stats -->
+      <div class="section-header">
+        <h2>Interview Pipeline</h2>
+        <a href="/interview-board.html" class="chart-link">View Board →</a>
+      </div>
+      <div class="quick-stats">
+        <div class="quick-stat">
+          <div class="quick-stat-icon" style="background: rgba(20, 184, 166, 0.15); color: #14b8a6;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <div class="quick-stat-content">
+            <div class="quick-stat-value" x-text="getActiveCandidatesCount()">0</div>
+            <div class="quick-stat-label">Active Candidates</div>
+          </div>
+        </div>
+        <div class="quick-stat">
+          <div class="quick-stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="quick-stat-content">
+            <div class="quick-stat-value" x-text="getCompletedInterviewsCount()">0</div>
+            <div class="quick-stat-label">Interviews Done</div>
+          </div>
+        </div>
+        <div class="quick-stat">
+          <div class="quick-stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="quick-stat-content">
+            <div class="quick-stat-value" x-text="getScheduledInterviewsCount()">0</div>
+            <div class="quick-stat-label">Scheduled</div>
+          </div>
+        </div>
+        <div class="quick-stat">
+          <div class="quick-stat-icon" style="background: rgba(124, 58, 237, 0.15); color: #7c3aed;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div class="quick-stat-content">
+            <div class="quick-stat-value"><span x-text="getInterviewPassRate()">0</span><span style="font-size: 0.75rem; opacity: 0.7;">%</span></div>
+            <div class="quick-stat-label">Pass Rate</div>
           </div>
         </div>
       </div>

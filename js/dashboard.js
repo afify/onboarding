@@ -12,6 +12,9 @@ document.addEventListener('alpine:init', () => {
     get categories() { return Alpine.store('app').categories; },
     get statuses() { return Alpine.store('app').statuses; },
     get activities() { return Alpine.store('app').activityLog; },
+    get candidates() { return Alpine.store('app').candidates || []; },
+    get interviews() { return Alpine.store('app').interviews || []; },
+    get interviewStages() { return Alpine.store('app').interviewStages || []; },
 
     notes: [],
     selectedWeek: 1,
@@ -221,6 +224,89 @@ document.addEventListener('alpine:init', () => {
     getBlockedCount() {
       const blockedStatusId = this.getStatusId('blocked');
       return this.progress.filter(p => p.status_id === blockedStatusId).length;
+    },
+
+    // Interview statistics
+    getActiveCandidatesCount() {
+      return this.candidates.length;
+    },
+
+    getCompletedInterviewsCount() {
+      return this.interviews.filter(i => i.status === 'completed').length;
+    },
+
+    getScheduledInterviewsCount() {
+      return this.interviews.filter(i => i.status === 'scheduled').length;
+    },
+
+    getInterviewStagesCount() {
+      return this.interviewStages.length;
+    },
+
+    getInterviewPassRate() {
+      const completed = this.interviews.filter(i => i.status === 'completed');
+      if (completed.length === 0) return 0;
+      const passed = completed.filter(i => i.decision === 'pass').length;
+      return Math.round((passed / completed.length) * 100);
+    },
+
+    getCandidatesByStage(stageId) {
+      return this.candidates.filter(c => c.current_stage_id === stageId).length;
+    },
+
+    getHiredCandidatesCount() {
+      return this.candidates.filter(c => c.status === 'hired').length;
+    },
+
+    getRejectedCandidatesCount() {
+      return this.candidates.filter(c => c.status === 'rejected').length;
+    },
+
+    getPendingDecisionsCount() {
+      // Candidates still active in the pipeline (not hired, not rejected)
+      return this.candidates.filter(c => !c.status || c.status === 'active').length;
+    },
+
+    getTotalOutcomes() {
+      return this.getHiredCandidatesCount() + this.getRejectedCandidatesCount() + this.getPendingDecisionsCount();
+    },
+
+    getOutcomePercent(type) {
+      const total = this.getTotalOutcomes();
+      if (total === 0) return 0;
+      let count = 0;
+      if (type === 'hired') count = this.getHiredCandidatesCount();
+      else if (type === 'rejected') count = this.getRejectedCandidatesCount();
+      else if (type === 'pending') count = this.getPendingDecisionsCount();
+      return Math.round((count / total) * 100);
+    },
+
+    getRecentInterviews() {
+      return this.interviews
+        .filter(i => i.status === 'completed')
+        .sort((a, b) => new Date(b.completed_at || b.created_at) - new Date(a.completed_at || a.created_at))
+        .slice(0, 5);
+    },
+
+    getCandidateName(candidateId) {
+      const candidate = this.candidates.find(c => c.id === candidateId);
+      return candidate?.name || 'Unknown';
+    },
+
+    getCandidateInitials(candidateId) {
+      const name = this.getCandidateName(candidateId);
+      return this.getInitials(name);
+    },
+
+    getInterviewStageName(stageId) {
+      const stage = this.interviewStages.find(s => s.id === stageId);
+      return stage?.label || 'Unknown Stage';
+    },
+
+    formatDecisionShort(decision) {
+      if (decision === 'pass') return '✓';
+      if (decision === 'fail') return '✗';
+      return '?';
     },
 
     getWeekCompletionPercent(weekId) {

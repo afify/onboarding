@@ -58,7 +58,7 @@
             </svg>
           </div>
           <div class="stat-data">
-            <div class="stat-value" x-text="candidates.length">0</div>
+            <div class="stat-value" x-text="activeCandidates.length">0</div>
             <div class="stat-label">Active Candidates</div>
           </div>
         </div>
@@ -208,6 +208,45 @@
             </div>
           </div>
         </template>
+
+        <!-- Rejected Column (hardcoded status) -->
+        <div class="kanban-column status-column rejected">
+          <div class="kanban-header">
+            <div class="kanban-title">
+              <span class="stage-color-dot" style="background: #ef4444"></span>
+              <span>Rejected</span>
+            </div>
+            <span class="kanban-count" x-text="getRejectedCandidates().length"></span>
+          </div>
+          <div class="kanban-cards">
+            <template x-for="candidate in getRejectedCandidates()" :key="candidate.id">
+              <div class="candidate-card rejected-card">
+                <div class="candidate-name" x-text="candidate.name"></div>
+                <div class="candidate-position" x-text="candidate.position_applied || 'No position specified'"></div>
+                <div class="candidate-rejection-reason" x-show="candidate.rejection_reason" x-text="candidate.rejection_reason"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Hired Column (hardcoded status) -->
+        <div class="kanban-column status-column hired">
+          <div class="kanban-header">
+            <div class="kanban-title">
+              <span class="stage-color-dot" style="background: #10b981"></span>
+              <span>Hired</span>
+            </div>
+            <span class="kanban-count" x-text="getHiredCandidates().length"></span>
+          </div>
+          <div class="kanban-cards">
+            <template x-for="candidate in getHiredCandidates()" :key="candidate.id">
+              <div class="candidate-card hired-card">
+                <div class="candidate-name" x-text="candidate.name"></div>
+                <div class="candidate-position" x-text="candidate.position_applied || 'No position specified'"></div>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -249,6 +288,12 @@
             <label class="form-label" for="newCandidateResume">Resume/CV</label>
             <input type="file" id="newCandidateResume" class="form-input file-input" @change="handleResumeUpload($event)" accept=".pdf,.doc,.docx">
             <p class="form-help">Accepted formats: PDF, DOC, DOCX</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newCandidateCodeSubmission">Code Submission</label>
+            <input type="file" id="newCandidateCodeSubmission" class="form-input file-input" @change="handleCodeSubmissionUpload($event)" accept=".zip">
+            <p class="form-help">Accepted format: ZIP</p>
           </div>
 
           <div class="form-group">
@@ -307,6 +352,16 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Download Resume
+              </button>
+            </div>
+
+            <div class="candidate-detail-code" x-show="detailCandidate.code_submission_path">
+              <h4 class="section-title">Code Submission</h4>
+              <button class="btn-secondary" @click="downloadCodeSubmission(detailCandidate)">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                Download Code
               </button>
             </div>
 
@@ -594,6 +649,56 @@
           <button type="button" class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
           <button type="button" class="btn-danger" @click="executeDelete">Delete</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Reject Candidate Modal -->
+    <div class="modal-overlay" x-show="showRejectModal" x-cloak @click.self="showRejectModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Reject Candidate</h2>
+          <button class="modal-close" @click="showRejectModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <template x-if="rejectTarget">
+          <div class="reject-form">
+            <div class="reject-candidate-info">
+              <div class="avatar" :style="'background: ' + getAvatarColor(rejectTarget.name)">
+                <span x-text="getInitials(rejectTarget.name)"></span>
+              </div>
+              <div>
+                <strong x-text="rejectTarget.name"></strong>
+                <p class="text-muted small" x-text="rejectTarget.position_applied || 'No position'"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rejectionReason">Rejection Reason *</label>
+              <textarea
+                id="rejectionReason"
+                class="form-textarea"
+                x-model="rejectionReason"
+                rows="4"
+                placeholder="Please provide a reason for rejecting this candidate..."
+                required></textarea>
+              <span class="form-hint">This will be recorded for future reference.</span>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="showRejectModal = false">Cancel</button>
+              <button type="button" class="btn-danger" @click="executeReject">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Reject Candidate
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
 

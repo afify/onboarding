@@ -1,6 +1,6 @@
 .app-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: 240px 1fr;
   grid-template-rows: 64px 1fr;
   min-height: 100vh;
   position: relative;
@@ -9,7 +9,7 @@
 
 .admin-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 300px;
+  grid-template-columns: 240px 1fr;
   grid-template-rows: 64px 1fr;
   min-height: 100vh;
   position: relative;
@@ -96,11 +96,11 @@
 
 @media (max-width: 1400px) {
   .app-layout {
-    grid-template-columns: 200px 1fr 280px;
+    grid-template-columns: 200px 1fr;
   }
 
   .admin-layout {
-    grid-template-columns: 200px 1fr 260px;
+    grid-template-columns: 200px 1fr;
   }
 }
 

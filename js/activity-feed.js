@@ -1,12 +1,24 @@
 import { supabase } from './supabase-client.js';
 
 const activityHTML = `
-  <aside class="sidebar-right" x-data="activityFeed">
-    <div class="activity-header">
-      <span class="activity-title">Activity Feed</span>
-      <div class="activity-live">LIVE</div>
-    </div>
-    <div class="activity-list">
+  <div class="activity-feed-wrapper" x-data="activityFeed">
+    <!-- Floating toggle button - always visible -->
+    <button class="activity-toggle-floating" @click="feedVisible = !feedVisible" :title="feedVisible ? 'Hide activity feed' : 'Show activity feed'">
+      <svg x-show="feedVisible" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+      </svg>
+      <svg x-show="!feedVisible" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <!-- Sidebar - hidden when collapsed -->
+    <aside class="sidebar-right" x-show="feedVisible" x-transition:enter="sidebar-enter" x-transition:leave="sidebar-leave">
+      <div class="activity-header">
+        <span class="activity-title">Activity Feed</span>
+        <div class="activity-live">LIVE</div>
+      </div>
+      <div class="activity-list">
       <template x-if="activityLog.length === 0">
         <div class="activity-empty">No activity yet</div>
       </template>
@@ -74,6 +86,7 @@ const activityHTML = `
       </div>
     </template>
   </aside>
+  </div>
 `;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -88,6 +101,8 @@ document.addEventListener('alpine:init', () => {
     subscription: null,
     showActivityModal: false,
     selectedActivity: null,
+    feedVisible: true,
+    layoutEl: null,
 
     get activityLog() {
       return Alpine.store('app').activityLog;
@@ -96,6 +111,19 @@ document.addEventListener('alpine:init', () => {
     async init() {
       try {
         const store = Alpine.store('app');
+
+        // Load saved visibility state from localStorage (default to true)
+        this.feedVisible = localStorage.getItem('activityFeedVisible') !== 'false';
+
+        // Get layout element for toggling sidebar class
+        this.layoutEl = document.querySelector('.app-layout, .admin-layout, .reports-layout');
+        this.updateLayoutClass();
+
+        // Watch feedVisible changes and persist to localStorage
+        this.$watch('feedVisible', (value) => {
+          this.updateLayoutClass();
+          localStorage.setItem('activityFeedVisible', value);
+        });
 
         if (!store.dataReady) {
           await store.initAuth();
@@ -112,6 +140,12 @@ document.addEventListener('alpine:init', () => {
 
       } catch (e) {
         console.error('Activity feed init error:', e);
+      }
+    },
+
+    updateLayoutClass() {
+      if (this.layoutEl) {
+        this.layoutEl.classList.toggle('activity-sidebar-visible', this.feedVisible);
       }
     },
 

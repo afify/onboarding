@@ -43,6 +43,7 @@ document.addEventListener('alpine:init', () => {
     newCandidatePosition: '',
     newCandidateNotes: '',
     newCandidateResume: null,
+    newCandidateCodeSubmission: null,
 
     // Detail view
     detailCandidate: null,
@@ -72,6 +73,11 @@ document.addEventListener('alpine:init', () => {
     deleteModalMessage: '',
     deleteTarget: null,
     deleteType: null,
+
+    // Rejection modal
+    showRejectModal: false,
+    rejectTarget: null,
+    rejectionReason: '',
 
     async init() {
       const store = Alpine.store('app');
@@ -146,12 +152,26 @@ document.addEventListener('alpine:init', () => {
     },
 
     // Candidate filtering
+    // Filter to only active candidates (not rejected/hired)
+    get activeCandidates() {
+      return this.candidates.filter(c => c.status === 'active');
+    },
+
     getUnassignedCandidates() {
-      return this.candidates.filter(c => !c.current_stage_id);
+      return this.activeCandidates.filter(c => !c.current_stage_id);
     },
 
     getCandidatesForStage(stageId) {
-      return this.candidates.filter(c => c.current_stage_id === stageId);
+      return this.activeCandidates.filter(c => c.current_stage_id === stageId);
+    },
+
+    // Hardcoded status columns
+    getRejectedCandidates() {
+      return this.candidates.filter(c => c.status === 'rejected');
+    },
+
+    getHiredCandidates() {
+      return this.candidates.filter(c => c.status === 'hired');
     },
 
     // Stats
@@ -295,6 +315,7 @@ document.addEventListener('alpine:init', () => {
       this.newCandidatePosition = '';
       this.newCandidateNotes = '';
       this.newCandidateResume = null;
+      this.newCandidateCodeSubmission = null;
       this.showAddCandidateModal = true;
     },
 
@@ -400,6 +421,46 @@ document.addEventListener('alpine:init', () => {
       URL.revokeObjectURL(url);
     },
 
+    // Code submission handling
+    handleCodeSubmissionUpload(event) {
+      const file = event.target.files?.[0];
+      if (file) {
+        this.newCandidateCodeSubmission = file;
+      }
+    },
+
+    async uploadCodeSubmission(file, candidateId) {
+      const ext = file.name.split('.').pop();
+      const path = `${candidateId}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from('code-submissions')
+        .upload(path, file, { upsert: true });
+
+      if (error) throw error;
+      return path;
+    },
+
+    async downloadCodeSubmission(candidate) {
+      if (!candidate.code_submission_path) return;
+
+      const { data, error } = await supabase.storage
+        .from('code-submissions')
+        .download(candidate.code_submission_path);
+
+      if (error) {
+        this.showAlert('error', 'Failed to download code submission');
+        return;
+      }
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${candidate.name.replace(/\s+/g, '_')}_code_submission.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
     // CRUD operations
     async addCandidate() {
       try {
@@ -427,6 +488,11 @@ document.addEventListener('alpine:init', () => {
             updateData.resume_path = resumePath;
           }
 
+          if (this.newCandidateCodeSubmission) {
+            const codePath = await this.uploadCodeSubmission(this.newCandidateCodeSubmission, this.detailCandidate.id);
+            updateData.code_submission_path = codePath;
+          }
+
           const { error } = await supabase
             .from('candidates')
             .update(updateData)
@@ -445,11 +511,22 @@ document.addEventListener('alpine:init', () => {
 
           if (error) throw error;
 
+          const fileUpdates = {};
+
           if (this.newCandidateResume && newCandidate) {
             const resumePath = await this.uploadResume(this.newCandidateResume, newCandidate.id);
+            fileUpdates.resume_path = resumePath;
+          }
+
+          if (this.newCandidateCodeSubmission && newCandidate) {
+            const codePath = await this.uploadCodeSubmission(this.newCandidateCodeSubmission, newCandidate.id);
+            fileUpdates.code_submission_path = codePath;
+          }
+
+          if (Object.keys(fileUpdates).length > 0) {
             await supabase
               .from('candidates')
-              .update({ resume_path: resumePath })
+              .update(fileUpdates)
               .eq('id', newCandidate.id);
           }
 
@@ -562,11 +639,54 @@ document.addEventListener('alpine:init', () => {
     },
 
     confirmRejectCandidate(candidate) {
-      this.deleteTarget = candidate;
-      this.deleteType = 'reject';
-      this.deleteModalTitle = 'Reject Candidate';
-      this.deleteModalMessage = `Are you sure you want to reject "${candidate.name}"? This will remove them from the pipeline.`;
-      this.showDeleteModal = true;
+      this.rejectTarget = candidate;
+      this.rejectionReason = '';
+      this.showRejectModal = true;
+    },
+
+    async executeReject() {
+      try {
+        if (!this.rejectionReason.trim()) {
+          this.showAlert('error', 'Please provide a rejection reason');
+          return;
+        }
+
+        const reason = sanitizeInput(this.rejectionReason, 1000);
+        const store = Alpine.store('app');
+        const currentMentor = store.mentors?.find(m => m.user_id === store.session?.user?.id);
+
+        // Find the Rejected stage
+        const rejectedStage = this.interviewStages.find(s =>
+          s.name === 'rejected' || s.label.toLowerCase() === 'rejected'
+        );
+
+        const updateData = {
+          status: 'rejected',
+          rejection_reason: reason,
+          rejected_at: new Date().toISOString(),
+          rejected_by: currentMentor?.id || null,
+          updated_at: new Date().toISOString()
+        };
+
+        // Move to Rejected stage if it exists
+        if (rejectedStage) {
+          updateData.current_stage_id = rejectedStage.id;
+        }
+
+        await supabase
+          .from('candidates')
+          .update(updateData)
+          .eq('id', this.rejectTarget.id);
+
+        this.showAlert('success', `${this.rejectTarget.name} has been rejected`);
+        this.showRejectModal = false;
+        this.showCandidateDetailModal = false;
+        this.rejectTarget = null;
+        this.rejectionReason = '';
+        await this.loadData();
+      } catch (err) {
+        this.showAlert('error', err.message || 'Failed to reject candidate');
+      }
     },
 
     confirmDeleteStage(stage) {
@@ -587,14 +707,7 @@ document.addEventListener('alpine:init', () => {
 
     async executeDelete() {
       try {
-        if (this.deleteType === 'reject') {
-          await supabase
-            .from('candidates')
-            .update({ status: 'rejected', updated_at: new Date().toISOString() })
-            .eq('id', this.deleteTarget.id);
-          this.showAlert('success', 'Candidate rejected');
-          this.showCandidateDetailModal = false;
-        } else if (this.deleteType === 'stage') {
+        if (this.deleteType === 'stage') {
           await supabase
             .from('interview_stages')
             .delete()
@@ -1358,27 +1471,9 @@ document.addEventListener('alpine:init', () => {
       );
     },
 
-    async rejectCandidate(candidate) {
+    rejectCandidate(candidate) {
       if (!candidate) return;
-
-      if (!confirm(`Are you sure you want to reject ${candidate.name}?`)) {
-        return;
-      }
-
-      try {
-        const { error } = await supabase
-          .from('candidates')
-          .update({ status: 'rejected' })
-          .eq('id', candidate.id);
-
-        if (error) throw error;
-
-        await Alpine.store('app').loadData();
-        this.showAlert('success', `${candidate.name} has been rejected`);
-      } catch (err) {
-        console.error('Error rejecting candidate:', err);
-        this.showAlert('error', err.message || 'Failed to reject candidate');
-      }
+      this.confirmRejectCandidate(candidate);
     }
   }));
 });

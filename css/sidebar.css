@@ -4,6 +4,8 @@
   padding: 1.5rem;
   overflow-y: auto;
   min-height: 100vh;
+  position: relative;
+  z-index: 10;
 }
 
 .sidebar-section-title {
@@ -118,8 +120,57 @@
   opacity: 0.7;
 }
 
+/* Sidebar wrapper */
+.sidebar-wrapper {
+  display: contents;
+}
+
+/* Floating toggle button - always visible at top */
+.sidebar-toggle-floating {
+  position: fixed;
+  left: 240px;
+  top: 80px;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle-floating:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Move toggle to left edge when sidebar is hidden */
+.sidebar-hidden .sidebar-toggle-floating {
+  left: 10px;
+  transform: none;
+}
+
+/* Layout adjustments when sidebar is hidden */
+.sidebar-hidden .sidebar-left {
+  display: none;
+}
+
+.sidebar-hidden.app-layout,
+.sidebar-hidden.admin-layout {
+  grid-template-columns: 1fr;
+}
+
 @media print {
-  .sidebar-left {
+  .sidebar-left,
+  .sidebar-toggle-floating,
+  .sidebar-hide-btn {
     display: none;
   }
 }

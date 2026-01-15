@@ -18,11 +18,14 @@ document.addEventListener('alpine:init', () => {
     showCandidateModal: false,
     showViewModal: false,
     showDeleteModal: false,
+    showRejectModal: false,
 
     // Form data
     editingCandidate: null,
     viewCandidate: null,
     deleteTarget: null,
+    rejectTarget: null,
+    rejectionReason: '',
     candidateName: '',
     candidateEmail: '',
     candidatePhone: '',
@@ -271,6 +274,26 @@ document.addEventListener('alpine:init', () => {
       URL.revokeObjectURL(url);
     },
 
+    async downloadCodeSubmission(candidate) {
+      if (!candidate.code_submission_path) return;
+
+      const { data, error } = await supabase.storage
+        .from('code-submissions')
+        .download(candidate.code_submission_path);
+
+      if (error) {
+        this.showAlert('error', 'Failed to download code submission');
+        return;
+      }
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${candidate.name.replace(/\s+/g, '_')}_code_submission.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
     // CRUD operations
     async saveCandidate() {
       try {
@@ -363,6 +386,57 @@ document.addEventListener('alpine:init', () => {
         await this.loadData();
       } catch (err) {
         this.showAlert('error', err.message || 'Failed to delete candidate');
+      }
+    },
+
+    confirmRejectCandidate(candidate) {
+      this.rejectTarget = candidate;
+      this.rejectionReason = '';
+      this.showRejectModal = true;
+    },
+
+    async executeReject() {
+      try {
+        if (!this.rejectionReason.trim()) {
+          this.showAlert('error', 'Please provide a rejection reason');
+          return;
+        }
+
+        const reason = sanitizeInput(this.rejectionReason, 1000);
+        const store = Alpine.store('app');
+        const currentMentor = store.mentors?.find(m => m.user_id === store.session?.user?.id);
+
+        // Find the Rejected stage
+        const rejectedStage = this.interviewStages.find(s =>
+          s.name === 'rejected' || s.label.toLowerCase() === 'rejected'
+        );
+
+        const updateData = {
+          status: 'rejected',
+          rejection_reason: reason,
+          rejected_at: new Date().toISOString(),
+          rejected_by: currentMentor?.id || null,
+          updated_at: new Date().toISOString()
+        };
+
+        // Move to Rejected stage if it exists
+        if (rejectedStage) {
+          updateData.current_stage_id = rejectedStage.id;
+        }
+
+        await supabase
+          .from('candidates')
+          .update(updateData)
+          .eq('id', this.rejectTarget.id);
+
+        this.showAlert('success', `${this.rejectTarget.name} has been rejected`);
+        this.showRejectModal = false;
+        this.showViewModal = false;
+        this.rejectTarget = null;
+        this.rejectionReason = '';
+        await this.loadData();
+      } catch (err) {
+        this.showAlert('error', err.message || 'Failed to reject candidate');
       }
     }
   }));

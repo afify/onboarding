@@ -19,7 +19,18 @@ const isOnboardingActive = () => {
 };
 
 const sidebarHTML = `
-  <aside class="sidebar-left" x-data="sidebarData()">
+  <div class="sidebar-wrapper" x-data="sidebarData()">
+    <!-- Toggle button - always visible -->
+    <button class="sidebar-toggle-floating" @click="sidebarVisible = !sidebarVisible" :title="sidebarVisible ? 'Hide navigation' : 'Show navigation'">
+      <svg x-show="!sidebarVisible" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+      <svg x-show="sidebarVisible" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <aside class="sidebar-left" x-show="sidebarVisible" x-transition:enter="sidebar-enter" x-transition:leave="sidebar-leave">
     <div class="sidebar-section-title">Navigation</div>
     <div class="nav-menu">
       <a href="/dashboard.html" class="nav-item ${isActive('/dashboard.html') ? 'active' : ''}">
@@ -110,6 +121,7 @@ const sidebarHTML = `
     </div>
     <div id="sidebar-extra"></div>
   </aside>
+  </div>
 `;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -130,6 +142,30 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('sidebarData', () => ({
     onboardingOpen: isOnboardingActive(),
     interviewsOpen: isInterviewActive(),
+    sidebarVisible: true,
+    layoutEl: null,
+
+    init() {
+      // Load saved visibility state from localStorage (default to true)
+      this.sidebarVisible = localStorage.getItem('sidebarVisible') !== 'false';
+
+      // Get layout element for toggling class
+      this.layoutEl = document.querySelector('.app-layout, .admin-layout, .reports-layout');
+      this.updateLayoutClass();
+
+      // Watch sidebarVisible changes and persist to localStorage
+      this.$watch('sidebarVisible', (value) => {
+        this.updateLayoutClass();
+        localStorage.setItem('sidebarVisible', value);
+      });
+    },
+
+    updateLayoutClass() {
+      if (this.layoutEl) {
+        this.layoutEl.classList.toggle('sidebar-hidden', !this.sidebarVisible);
+      }
+    },
+
     get isAdminUser() {
       return Alpine.store('app').isAdmin;
     }
