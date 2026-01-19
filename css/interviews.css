@@ -102,6 +102,16 @@
   padding: 0.5rem 1rem;
 }
 
+.content-actions .btn-primary,
+.content-actions .btn-secondary {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+}
+
 .section-actions {
   display: flex;
   align-items: center;

@@ -54,7 +54,7 @@ document.addEventListener('alpine:init', () => {
     subscribeToChanges() {
       supabase
         .channel('trainees-page')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'trainees' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
           this.loadData();
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'progress' }, () => {
@@ -209,9 +209,10 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      const { error } = await supabase.from('trainees').insert({
+      const { error } = await supabase.from('candidates').insert({
         name,
         email,
+        type: 'trainee',
         assigned_mentor_ids: this.newTraineeMentorIds.length > 0 ? this.newTraineeMentorIds : [],
         start_date: this.newTraineeStartDate
       });
@@ -258,7 +259,7 @@ document.addEventListener('alpine:init', () => {
       }
 
       const { error } = await supabase
-        .from('trainees')
+        .from('candidates')
         .update({
           name,
           email,
@@ -285,7 +286,7 @@ document.addEventListener('alpine:init', () => {
       if (!this.deleteTarget) return;
 
       const { error } = await supabase
-        .from('trainees')
+        .from('candidates')
         .delete()
         .eq('id', this.deleteTarget.id);
 

@@ -85,7 +85,7 @@ document.addEventListener('alpine:init', () => {
 
       supabase
         .channel('dashboard-trainees-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'trainees' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
           this.loadData();
         })
         .subscribe();
@@ -541,10 +541,11 @@ document.addEventListener('alpine:init', () => {
       }
 
       const { error } = await supabase
-        .from('trainees')
+        .from('candidates')
         .insert({
           name,
           email,
+          type: 'trainee',
           assigned_mentor_id: this.newTrainee.assigned_mentor_id || null,
           start_date: this.newTrainee.start_date
         });

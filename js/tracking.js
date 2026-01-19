@@ -69,7 +69,7 @@ document.addEventListener('alpine:init', () => {
 
       supabase
         .channel('tracking-trainees-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'trainees' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
           this.loadData();
         })
         .subscribe();

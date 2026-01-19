@@ -247,21 +247,40 @@ document.addEventListener('alpine:init', () => {
 
       const candidateId = this.draggingCandidate.id;
       const currentStageId = this.draggingCandidate.current_stage_id;
+      const wasRejected = this.draggingCandidate.status === 'rejected';
 
-      if (currentStageId === stageId) {
+      // Skip if dropping on same stage (unless reactivating from rejected)
+      if (currentStageId === stageId && !wasRejected) {
         this.draggingCandidate = null;
         return;
       }
 
       try {
+        const updateData = {
+          current_stage_id: stageId,
+          updated_at: new Date().toISOString()
+        };
+
+        // Reactivate if candidate was rejected
+        if (wasRejected) {
+          updateData.status = 'active';
+          updateData.rejection_reason = null;
+          updateData.rejected_at = null;
+          updateData.rejected_by = null;
+        }
+
         const { error } = await supabase
           .from('candidates')
-          .update({ current_stage_id: stageId, updated_at: new Date().toISOString() })
+          .update(updateData)
           .eq('id', candidateId);
 
         if (error) throw error;
 
-        this.showAlert('success', `Moved candidate to ${stageId ? this.getStageName(stageId) : 'New Candidates'}`);
+        const targetName = stageId ? this.getStageName(stageId) : 'New Candidates';
+        const message = wasRejected
+          ? `Reactivated and moved to ${targetName}`
+          : `Moved candidate to ${targetName}`;
+        this.showAlert('success', message);
         await this.loadData();
       } catch (err) {
         this.showAlert('error', err.message || 'Failed to move candidate');
@@ -1417,15 +1436,6 @@ document.addEventListener('alpine:init', () => {
     viewCandidatePDF(candidate) {
       if (!candidate) return;
 
-      const candidateInterviews = this.interviews.filter(i =>
-        i.candidate_id === candidate.id && i.status === 'completed'
-      );
-
-      if (candidateInterviews.length === 0) {
-        this.showAlert('warning', 'No completed interviews to generate report');
-        return;
-      }
-
       try {
         const data = this.buildReportData(candidate);
         const doc = this.createPDFDocument(data);
@@ -1440,15 +1450,6 @@ document.addEventListener('alpine:init', () => {
 
     downloadCandidatePDF(candidate) {
       if (!candidate) return;
-
-      const candidateInterviews = this.interviews.filter(i =>
-        i.candidate_id === candidate.id && i.status === 'completed'
-      );
-
-      if (candidateInterviews.length === 0) {
-        this.showAlert('warning', 'No completed interviews to generate report');
-        return;
-      }
 
       try {
         const data = this.buildReportData(candidate);
@@ -1474,6 +1475,207 @@ document.addEventListener('alpine:init', () => {
     rejectCandidate(candidate) {
       if (!candidate) return;
       this.confirmRejectCandidate(candidate);
+    },
+
+    downloadAllCandidatesReport() {
+      try {
+        const doc = new window.jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const contentWidth = pageWidth - margin * 2;
+
+        // Get all candidates
+        const allCandidates = this.candidates;
+
+        // Calculate stats
+        const hired = allCandidates.filter(c => c.status === 'hired').length;
+        const rejected = allCandidates.filter(c => c.status === 'rejected').length;
+        const active = allCandidates.filter(c => c.status === 'active').length;
+        const totalInterviews = this.interviews.filter(i => i.status === 'completed').length;
+
+        // Use template header
+        let y = addHeader(doc, {
+          subtitle: 'ALL CANDIDATES REPORT',
+          rightTitle: `${allCandidates.length} Candidates`,
+          rightSubtitle: `${totalInterviews} Interviews`,
+          rightInfo: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        });
+
+        y -= 8;
+
+        // Summary card
+        doc.setFillColor(...colors.white);
+        doc.setDrawColor(...colors.border);
+        doc.roundedRect(margin, y, contentWidth, 16, 2, 2, 'FD');
+
+        const summaryY = y + 10;
+        doc.setFontSize(10);
+
+        // Total
+        doc.setTextColor(...colors.textMuted);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Total:', margin + 6, summaryY);
+        doc.setTextColor(...colors.textDark);
+        doc.setFont('helvetica', 'bold');
+        doc.text(allCandidates.length.toString(), margin + 24, summaryY);
+
+        // Active
+        doc.setTextColor(...colors.textMuted);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Active:', margin + 38, summaryY);
+        doc.setTextColor(...colors.accent);
+        doc.setFont('helvetica', 'bold');
+        doc.text(active.toString(), margin + 58, summaryY);
+
+        // Hired
+        doc.setTextColor(...colors.textMuted);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Hired:', margin + 70, summaryY);
+        doc.setTextColor(...colors.success);
+        doc.setFont('helvetica', 'bold');
+        doc.text(hired.toString(), margin + 88, summaryY);
+
+        // Rejected
+        doc.setTextColor(...colors.textMuted);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Rejected:', margin + 100, summaryY);
+        doc.setTextColor(...colors.danger);
+        doc.setFont('helvetica', 'bold');
+        doc.text(rejected.toString(), margin + 126, summaryY);
+
+        // Pass rate
+        const passRate = allCandidates.length > 0 ? Math.round((hired / allCandidates.length) * 100) : 0;
+        doc.setTextColor(...colors.textMuted);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Pass Rate:', pageWidth - margin - 35, summaryY);
+        doc.setTextColor(...colors.cyan);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${passRate}%`, pageWidth - margin - 6, summaryY, { align: 'right' });
+
+        y += 22;
+
+        // Table header
+        doc.setFillColor(...colors.primary);
+        doc.rect(margin, y, contentWidth, 10, 'F');
+        doc.setTextColor(...colors.white);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+
+        const colX = [margin + 4, margin + 42, margin + 62, margin + 80, margin + 100, margin + 140];
+        doc.text('CANDIDATE', colX[0], y + 7);
+        doc.text('STATUS', colX[1], y + 7);
+        doc.text('STAGES', colX[2], y + 7);
+        doc.text('SCORE', colX[3], y + 7);
+        doc.text('DECISION', colX[4], y + 7);
+        doc.text('INTERVIEWER', colX[5], y + 7);
+
+        y += 12;
+
+        // Sort: hired first, then active, then rejected
+        const sortedCandidates = [...allCandidates].sort((a, b) => {
+          const order = { 'hired': 0, 'active': 1, 'rejected': 2, 'withdrawn': 3 };
+          return (order[a.status] || 4) - (order[b.status] || 4);
+        });
+
+        for (let i = 0; i < sortedCandidates.length; i++) {
+          const candidate = sortedCandidates[i];
+
+          // Check page break
+          y = pdfCheckPageBreak(doc, y, 10, 12);
+          if (y < 20) {
+            // Re-draw table header on new page
+            doc.setFillColor(...colors.primary);
+            doc.rect(margin, y, contentWidth, 10, 'F');
+            doc.setTextColor(...colors.white);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CANDIDATE', colX[0], y + 7);
+            doc.text('STATUS', colX[1], y + 7);
+            doc.text('STAGES', colX[2], y + 7);
+            doc.text('SCORE', colX[3], y + 7);
+            doc.text('DECISION', colX[4], y + 7);
+            doc.text('INTERVIEWER', colX[5], y + 7);
+            y += 12;
+          }
+
+          // Alternate row colors
+          if (i % 2 === 0) {
+            doc.setFillColor(...colors.lightBg);
+            doc.rect(margin, y - 3, contentWidth, 9, 'F');
+          }
+
+          // Get candidate interviews
+          const candidateInterviews = this.interviews.filter(int =>
+            int.candidate_id === candidate.id && int.status === 'completed'
+          );
+
+          // Calculate average score
+          const scores = candidateInterviews.map(int => parseFloat(int.overall_score) || 0);
+          const avgScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length * 10).toFixed(0) : '-';
+
+          // Get last interview
+          const lastInterview = candidateInterviews.sort((a, b) =>
+            new Date(b.completed_at || b.created_at) - new Date(a.completed_at || a.created_at)
+          )[0];
+          const lastDecision = lastInterview?.decision || '-';
+          const lastStage = lastInterview ? this.interviewStages.find(s => s.id === lastInterview.stage_id)?.label || '' : '';
+          const interviewer = lastInterview ? this.mentors.find(m => m.id === lastInterview.interviewer_id)?.name || '-' : '-';
+
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+
+          // Candidate name
+          doc.setTextColor(...colors.textDark);
+          const displayName = candidate.name.length > 22 ? candidate.name.substring(0, 20) + '...' : candidate.name;
+          doc.text(displayName, colX[0], y + 4);
+
+          // Status - colored text
+          const statusColor = candidate.status === 'hired' ? colors.success :
+                              candidate.status === 'rejected' ? colors.danger : colors.accent;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...statusColor);
+          doc.text(candidate.status.toUpperCase(), colX[1], y + 4);
+
+          // Stages
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...colors.textDark);
+          doc.text(`${candidateInterviews.length}/${this.interviewStages.length}`, colX[2], y + 4);
+
+          // Score - plain text, no color
+          doc.setTextColor(...colors.textDark);
+          doc.setFont('helvetica', 'normal');
+          doc.text(avgScore !== '-' ? `${avgScore}%` : '-', colX[3], y + 4);
+
+          // Last decision with stage - plain text, no color
+          doc.setTextColor(...colors.textDark);
+          doc.setFont('helvetica', 'normal');
+          if (lastDecision === 'pass') {
+            doc.text(`PASS (${lastStage})`, colX[4], y + 4);
+          } else if (lastDecision === 'fail') {
+            doc.text(`FAIL (${lastStage})`, colX[4], y + 4);
+          } else {
+            doc.text('-', colX[4], y + 4);
+          }
+
+          // Interviewer
+          doc.text(interviewer, colX[5], y + 4);
+
+          y += 9;
+        }
+
+        // Footer
+        addFooterToAllPages(doc, { leftText: 'Confidential - All Candidates Report' });
+
+        // View in browser
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+      } catch (err) {
+        console.error('Error generating all candidates report:', err);
+        this.showAlert('error', 'Failed to generate report');
+      }
     }
   }));
 });

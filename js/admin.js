@@ -62,7 +62,7 @@ document.addEventListener('alpine:init', () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => {
           this.loadData();
         })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'trainees' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
           this.loadData();
         })
         .subscribe();
@@ -207,9 +207,10 @@ document.addEventListener('alpine:init', () => {
           return;
         }
 
-        await supabase.from('trainees').insert({
+        await supabase.from('candidates').insert({
           name,
           email,
+          type: 'trainee',
           assigned_mentor_ids: this.newTraineeMentorIds.length > 0 ? this.newTraineeMentorIds : [],
           start_date: this.newTraineeStartDate
         });
@@ -297,7 +298,7 @@ document.addEventListener('alpine:init', () => {
         }
 
         const { error } = await supabase
-          .from('trainees')
+          .from('candidates')
           .update({
             name,
             email,
@@ -332,7 +333,7 @@ document.addEventListener('alpine:init', () => {
     async executeDelete() {
       try {
         if (this.deleteType === 'trainee') {
-          await supabase.from('trainees').delete().eq('id', this.deleteTarget.id);
+          await supabase.from('candidates').delete().eq('id', this.deleteTarget.id);
           this.showAlert('success', `Trainee "${this.deleteTarget.name}" deleted`);
         } else if (this.deleteType === 'mentor') {
           await supabase.from('mentors').delete().eq('id', this.deleteTarget.id);

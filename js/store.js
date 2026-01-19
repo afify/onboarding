@@ -146,7 +146,7 @@ export function initStore(Alpine) {
     },
 
     async refreshTrainees() {
-      const { data } = await supabase.from('trainees').select('*').order('created_at');
+      const { data } = await supabase.from('candidates').select('*').eq('type', 'trainee').order('created_at');
       this.trainees = data || [];
     },
 
