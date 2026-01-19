@@ -162,6 +162,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     getActivityMentorName(activity) {
+      // Use mentor_name from database join if available, else fallback to lookup
+      if (activity.mentor_name) return activity.mentor_name;
       const mentor = Alpine.store('app').mentors.find(m => m.id === activity.mentor_id);
       return mentor?.name || 'Someone';
     },
