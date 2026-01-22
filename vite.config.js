@@ -17,6 +17,7 @@ export default defineConfig({
         tracking: resolve(__dirname, 'tracking.html'),
         tasks: resolve(__dirname, 'tasks.html'),
         program: resolve(__dirname, 'program.html'),
+        documents: resolve(__dirname, 'documents.html'),
       },
     },
   },

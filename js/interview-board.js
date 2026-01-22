@@ -1112,6 +1112,7 @@ document.addEventListener('alpine:init', () => {
 
         // Notes
         if (stage.notes) {
+          y += 4; // Add padding-top (~10px) before notes
           doc.setTextColor(...colors.textMuted);
           doc.setFontSize(7);
           doc.setFont('helvetica', 'italic');
@@ -1406,6 +1407,7 @@ document.addEventListener('alpine:init', () => {
 
         // Notes section
         if (stage.notes) {
+          y += 4; // Add padding-top (~10px) before notes
           y = pdfCheckPageBreak(doc, y, 14);
           doc.setFillColor(255, 251, 235);
           doc.setDrawColor(251, 191, 36);

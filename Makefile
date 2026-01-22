@@ -1,7 +1,7 @@
 BUN = $(HOME)/.bun/bin/bun
 BUNX = $(BUN) x
 
-.PHONY: dev install push lint lint-js lint-html lint-css lint-fix
+.PHONY: dev install push lint lint-js lint-html lint-css lint-fix storage
 
 dev: install
 	$(BUN) run dev
@@ -33,3 +33,6 @@ lint-fix:
 	$(BUNX) eslint js/ --fix
 	@echo "==> Auto-fixing Stylelint issues..."
 	$(BUNX) stylelint "css/**/*.css" --fix
+
+storage:
+	$(BUNX) supabase storage ls ss:///resumes --experimental -r

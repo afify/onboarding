@@ -274,6 +274,22 @@ document.addEventListener('alpine:init', () => {
       URL.revokeObjectURL(url);
     },
 
+    async viewResume(candidate) {
+      if (!candidate.resume_path) return;
+
+      const { data, error } = await supabase.storage
+        .from('resumes')
+        .download(candidate.resume_path);
+
+      if (error) {
+        this.showAlert('error', 'Failed to load resume');
+        return;
+      }
+
+      const url = URL.createObjectURL(data);
+      window.open(url, '_blank');
+    },
+
     async downloadCodeSubmission(candidate) {
       if (!candidate.code_submission_path) return;
 

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Documents | Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/tracking.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/activity-feed.css">
+  <link rel="stylesheet" href="/css/hacker-console.css">
+  <script type="module" src="/js/app-documents.js"></script>
+</head>
+<body>
+  <div class="app-layout" x-data="documentsPage" x-cloak>
+    <main class="main-content">
+      <div class="content-header">
+        <h1 class="content-title">Documents</h1>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" x-bind:class="alert.type" x-show="alert.show" x-cloak x-transition>
+        <span x-text="alert.message"></span>
+        <button class="alert-close" @click="alert.show = false">&times;</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="resumes.length"></div>
+            <div class="stat-label">Resumes</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon in-progress">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="codeSubmissions.length"></div>
+            <div class="stat-label">Code Submissions</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon completed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value" x-text="allDocuments.length"></div>
+            <div class="stat-label">Total Files</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label class="filter-label" for="filterBucket">Bucket</label>
+          <select id="filterBucket" class="filter-select" x-model="bucketFilter">
+            <option value="">All Buckets</option>
+            <option value="resumes">Resumes</option>
+            <option value="code-submissions">Code Submissions</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="filterSearch">Search</label>
+          <input type="text" id="filterSearch" class="filter-input" placeholder="Search by filename..." x-model="searchQuery">
+        </div>
+        <button class="filter-toggle" @click="loadDocuments" title="Refresh documents">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="empty-state" x-show="loading">
+        <svg class="empty-icon animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <p class="empty-text">Loading documents...</p>
+      </div>
+
+      <!-- Documents Table -->
+      <div class="tasks-table-container" x-show="!loading && filteredDocuments.length > 0">
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Bucket</th>
+              <th>Candidate</th>
+              <th>Size</th>
+              <th>Uploaded</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="doc in filteredDocuments" :key="doc.id">
+              <tr>
+                <td>
+                  <div class="trainee-cell">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="trainee-name" x-text="doc.name"></span>
+                  </div>
+                </td>
+                <td>
+                  <span class="week-badge" x-text="doc.bucket"></span>
+                </td>
+                <td x-text="doc.candidateName || '-'"></td>
+                <td>
+                  <span class="date-cell" x-text="formatFileSize(getFileSize(doc))"></span>
+                </td>
+                <td>
+                  <span class="date-cell" x-text="formatDate(doc.created_at)"></span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn-edit" @click="viewDocument(doc)" title="View">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+                    <button class="btn-edit" @click="downloadDocument(doc)" title="Download">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                      </svg>
+                    </button>
+                    <button class="btn-edit" style="color: #f87171;" @click="confirmDelete(doc)" title="Delete">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" x-show="!loading && filteredDocuments.length === 0">
+        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="empty-text">No documents found.</p>
+        <p class="empty-subtext">Upload resumes or code submissions to see them here.</p>
+      </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" x-show="showDeleteModal" x-cloak @click.self="showDeleteModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2 class="modal-title">Delete Document</h2>
+          <button class="modal-close" @click="showDeleteModal = false">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p style="margin-bottom: 1.5rem;">Are you sure you want to delete "<span x-text="getDeleteTargetName()"></span>"? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #dc2626);" @click="executeDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
