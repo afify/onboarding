@@ -33,6 +33,7 @@ document.addEventListener('alpine:init', () => {
     candidateStageId: '',
     candidateNotes: '',
     candidateResume: null,
+    candidateCodeSubmission: null,
 
     // Alert
     alert: { show: false, type: '', message: '' },
@@ -164,11 +165,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     // Safe accessors for template expressions
-    hasEditingCandidateResume() {
+    get hasExistingResume() {
       return this.editingCandidate && this.editingCandidate.resume_path;
     },
 
-    getEditingCandidateResumePath() {
+    get existingResumePath() {
       return this.editingCandidate ? this.editingCandidate.resume_path : '';
     },
 
@@ -176,11 +177,15 @@ document.addEventListener('alpine:init', () => {
       return this.deleteTarget ? this.deleteTarget.name : '';
     },
 
-    getModalTitle() {
+    get isEditing() {
+      return !!this.editingCandidate;
+    },
+
+    get modalTitle() {
       return this.editingCandidate ? 'Edit Candidate' : 'Add Candidate';
     },
 
-    getSubmitButtonText() {
+    get submitButtonText() {
       return this.editingCandidate ? 'Save Changes' : 'Add Candidate';
     },
 
@@ -204,6 +209,7 @@ document.addEventListener('alpine:init', () => {
       this.candidateStageId = '';
       this.candidateNotes = '';
       this.candidateResume = null;
+      this.candidateCodeSubmission = null;
       this.showCandidateModal = true;
     },
 
@@ -216,6 +222,7 @@ document.addEventListener('alpine:init', () => {
       this.candidateStageId = candidate.current_stage_id || '';
       this.candidateNotes = candidate.notes || '';
       this.candidateResume = null;
+      this.candidateCodeSubmission = null;
       this.showCandidateModal = true;
     },
 
@@ -234,11 +241,18 @@ document.addEventListener('alpine:init', () => {
       this.showDeleteModal = true;
     },
 
-    // Resume handling
+    // File upload handling
     handleResumeUpload(event) {
       const file = event.target.files?.[0];
       if (file) {
         this.candidateResume = file;
+      }
+    },
+
+    handleCodeSubmissionUpload(event) {
+      const file = event.target.files?.[0];
+      if (file) {
+        this.candidateCodeSubmission = file;
       }
     },
 
@@ -248,6 +262,18 @@ document.addEventListener('alpine:init', () => {
 
       const { error } = await supabase.storage
         .from('resumes')
+        .upload(path, file, { upsert: true });
+
+      if (error) throw error;
+      return path;
+    },
+
+    async uploadCodeSubmission(file, candidateId) {
+      const ext = file.name.split('.').pop();
+      const path = `${candidateId}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from('code-submissions')
         .upload(path, file, { upsert: true });
 
       if (error) throw error;
@@ -345,6 +371,11 @@ document.addEventListener('alpine:init', () => {
             updateData.resume_path = resumePath;
           }
 
+          if (this.candidateCodeSubmission) {
+            const codePath = await this.uploadCodeSubmission(this.candidateCodeSubmission, this.editingCandidate.id);
+            updateData.code_submission_path = codePath;
+          }
+
           const { error } = await supabase
             .from('candidates')
             .update(updateData)
@@ -369,11 +400,20 @@ document.addEventListener('alpine:init', () => {
 
           if (error) throw error;
 
-          if (this.candidateResume && newCandidate) {
-            const resumePath = await this.uploadResume(this.candidateResume, newCandidate.id);
+          if (newCandidate && (this.candidateResume || this.candidateCodeSubmission)) {
+            const updateData = {};
+
+            if (this.candidateResume) {
+              updateData.resume_path = await this.uploadResume(this.candidateResume, newCandidate.id);
+            }
+
+            if (this.candidateCodeSubmission) {
+              updateData.code_submission_path = await this.uploadCodeSubmission(this.candidateCodeSubmission, newCandidate.id);
+            }
+
             await supabase
               .from('candidates')
-              .update({ resume_path: resumePath })
+              .update(updateData)
               .eq('id', newCandidate.id);
           }
 

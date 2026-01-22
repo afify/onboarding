@@ -232,7 +232,10 @@
 }
 
 .btn-primary {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.875rem;
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
   border: none;
@@ -252,7 +255,10 @@
 }
 
 .btn-secondary {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.875rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
@@ -271,7 +277,10 @@
 }
 
 .btn-danger {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.875rem;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   border: none;
@@ -282,6 +291,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn-danger:hover {
@@ -290,7 +300,10 @@
 }
 
 .btn-warning {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.875rem;
   background: linear-gradient(135deg, #f59e0b, #d97706);
   border: none;
@@ -301,6 +314,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn-warning:hover {
