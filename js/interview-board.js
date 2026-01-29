@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { isValidEmail, isValidName, sanitizeInput } from './security.js';
+import { isValidEmail, isValidName, sanitizeInput, validateFile, generateSecureFilename } from './security.js';
 import {
   colors,
   addHeader,
@@ -328,6 +328,7 @@ document.addEventListener('alpine:init', () => {
 
     // Modal openers
     openAddCandidateModal() {
+      this.detailCandidate = null;
       this.newCandidateName = '';
       this.newCandidateEmail = '';
       this.newCandidatePhone = '';
@@ -350,6 +351,8 @@ document.addEventListener('alpine:init', () => {
       this.newCandidatePhone = candidate.phone || '';
       this.newCandidatePosition = candidate.position_applied || '';
       this.newCandidateNotes = candidate.notes || '';
+      this.newCandidateResume = null;
+      this.newCandidateCodeSubmission = null;
       this.showAddCandidateModal = true;
     },
 
@@ -409,8 +412,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async uploadResume(file, candidateId) {
-      const ext = file.name.split('.').pop();
-      const path = `${candidateId}.${ext}`;
+      // Validate file before upload
+      const validation = validateFile(file, 'resume');
+      if (!validation.valid) {
+        throw new Error(validation.message);
+      }
+
+      // Generate secure filename (UUID-based)
+      const secureFilename = generateSecureFilename(file.name);
+      const path = `${candidateId}/${secureFilename}`;
 
       const { error } = await supabase.storage
         .from('resumes')
@@ -449,8 +459,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async uploadCodeSubmission(file, candidateId) {
-      const ext = file.name.split('.').pop();
-      const path = `${candidateId}.${ext}`;
+      // Validate file before upload
+      const validation = validateFile(file, 'code');
+      if (!validation.valid) {
+        throw new Error(validation.message);
+      }
+
+      // Generate secure filename (UUID-based)
+      const secureFilename = generateSecureFilename(file.name);
+      const path = `${candidateId}/${secureFilename}`;
 
       const { error } = await supabase.storage
         .from('code-submissions')
@@ -553,6 +570,9 @@ document.addEventListener('alpine:init', () => {
         }
 
         this.showAddCandidateModal = false;
+        this.newCandidateResume = null;
+        this.newCandidateCodeSubmission = null;
+        this.detailCandidate = null;
         await this.loadData();
       } catch (err) {
         this.showAlert('error', err.message || 'Failed to save candidate');

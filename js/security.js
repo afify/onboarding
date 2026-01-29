@@ -49,7 +49,120 @@ export function validatePassword(password) {
   if (password.length > 128) {
     return { valid: false, message: 'Password is too long' };
   }
+  // Require complexity: uppercase, lowercase, number, and symbol
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
+
+  if (!hasUppercase || !hasLowercase || !hasNumber || !hasSymbol) {
+    return {
+      valid: false,
+      message: 'Password must include uppercase, lowercase, number, and symbol'
+    };
+  }
   return { valid: true, message: '' };
+}
+
+// File validation constants
+const ALLOWED_RESUME_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+const ALLOWED_CODE_TYPES = ['application/zip', 'application/x-zip-compressed'];
+const ALLOWED_CODE_EXTENSIONS = ['.zip'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+/**
+ * Validates a file for upload
+ * @param {File} file - The file to validate
+ * @param {string} type - Either 'resume' or 'code'
+ * @returns {{ valid: boolean, message: string }}
+ */
+export function validateFile(file, type = 'resume') {
+  if (!file) {
+    return { valid: false, message: 'No file selected' };
+  }
+
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return { valid: false, message: 'File size must be less than 10MB' };
+  }
+
+  if (file.size === 0) {
+    return { valid: false, message: 'File is empty' };
+  }
+
+  // Get file extension
+  const fileName = file.name.toLowerCase();
+  const ext = '.' + fileName.split('.').pop();
+
+  // Validate based on type
+  if (type === 'resume') {
+    if (!ALLOWED_RESUME_EXTENSIONS.includes(ext)) {
+      return { valid: false, message: 'Resume must be PDF, DOC, or DOCX' };
+    }
+    if (!ALLOWED_RESUME_TYPES.includes(file.type) && file.type !== '') {
+      return { valid: false, message: 'Invalid resume file type' };
+    }
+  } else if (type === 'code') {
+    if (!ALLOWED_CODE_EXTENSIONS.includes(ext)) {
+      return { valid: false, message: 'Code submission must be a ZIP file' };
+    }
+    if (!ALLOWED_CODE_TYPES.includes(file.type) && file.type !== '') {
+      return { valid: false, message: 'Invalid code submission file type' };
+    }
+  }
+
+  // Check for suspicious double extensions
+  const parts = fileName.split('.');
+  if (parts.length > 2) {
+    const suspiciousExts = ['.exe', '.bat', '.sh', '.cmd', '.ps1', '.vbs', '.js', '.php'];
+    for (const part of parts.slice(0, -1)) {
+      if (suspiciousExts.some(sus => part.endsWith(sus.slice(1)))) {
+        return { valid: false, message: 'Invalid file name' };
+      }
+    }
+  }
+
+  return { valid: true, message: '' };
+}
+
+/**
+ * Generates a secure random filename
+ * @param {string} originalName - Original file name
+ * @returns {string} - Secure filename with UUID
+ */
+export function generateSecureFilename(originalName) {
+  const ext = originalName.split('.').pop().toLowerCase();
+  const uuid = crypto.randomUUID();
+  return `${uuid}.${ext}`;
+}
+
+/**
+ * Sanitizes a CSS color value to prevent CSS injection
+ * @param {string} color - Color value to sanitize
+ * @returns {string} - Safe color value or default
+ */
+export function sanitizeColor(color) {
+  if (!color || typeof color !== 'string') return '#6b7280';
+
+  // Allow hex colors
+  if (/^#[0-9A-Fa-f]{3,8}$/.test(color)) {
+    return color;
+  }
+
+  // Allow rgb/rgba with numbers only
+  if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(color)) {
+    return color;
+  }
+
+  // Allow named colors (basic set)
+  const namedColors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'gray', 'black', 'white', 'cyan', 'magenta'];
+  if (namedColors.includes(color.toLowerCase())) {
+    return color;
+  }
+
+  // Default to gray for invalid colors
+  return '#6b7280';
 }
 
 export function validateForm(data, rules) {
@@ -110,6 +223,9 @@ if (typeof window !== 'undefined') {
     isValidName,
     sanitizeInput,
     validatePassword,
-    validateForm
+    validateForm,
+    validateFile,
+    generateSecureFilename,
+    sanitizeColor
   };
 }

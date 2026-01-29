@@ -1,10 +1,18 @@
-// Debug console - disabled in production unless VITE_DEBUG_CONSOLE=true
+// Debug console - ALWAYS disabled in production for security
+// This console exposes network requests and should NEVER be enabled in production
 const isProduction = import.meta.env?.PROD ?? false;
 const debugEnabled = import.meta.env?.VITE_DEBUG_CONSOLE === 'true';
 
-if (isProduction && !debugEnabled) {
-  // Skip loading debug console in production
+// Security: Debug console is completely disabled in production
+// The VITE_DEBUG_CONSOLE flag is intentionally ignored in production builds
+if (isProduction) {
+  // Production mode - completely skip loading debug console
+  console.info('[Security] Debug console disabled in production');
+} else if (!debugEnabled) {
+  // Development mode without debug flag - skip but inform
+  console.info('[Debug] Set VITE_DEBUG_CONSOLE=true to enable debug console');
 } else {
+  // Development mode with debug flag enabled
 
 function setCookie(name, value, days = 365) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();

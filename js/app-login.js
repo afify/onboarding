@@ -48,9 +48,15 @@ Alpine.data('loginForm', () => ({
         window.location.href = '/dashboard.html';
       }
     } catch (err) {
-      console.error('Login error:', err);
+      // Sanitize error logging - only log message, not full stack/object
+      if (import.meta.env?.DEV) {
+        console.error('Login error:', err?.message || 'Unknown error');
+      }
       this.error = 'An unexpected error occurred. Please try again.';
       this.loading = false;
+    } finally {
+      // Security: Clear password from memory after login attempt
+      this.password = '';
     }
   }
 }));

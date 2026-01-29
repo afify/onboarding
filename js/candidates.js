@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { isValidEmail, isValidName, sanitizeInput } from './security.js';
+import { isValidEmail, isValidName, sanitizeInput, validateFile, generateSecureFilename } from './security.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('candidatesPage', () => ({
@@ -257,8 +257,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async uploadResume(file, candidateId) {
-      const ext = file.name.split('.').pop();
-      const path = `${candidateId}.${ext}`;
+      // Validate file before upload
+      const validation = validateFile(file, 'resume');
+      if (!validation.valid) {
+        throw new Error(validation.message);
+      }
+
+      // Generate secure filename (UUID-based)
+      const secureFilename = generateSecureFilename(file.name);
+      const path = `${candidateId}/${secureFilename}`;
 
       const { error } = await supabase.storage
         .from('resumes')
@@ -269,8 +276,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async uploadCodeSubmission(file, candidateId) {
-      const ext = file.name.split('.').pop();
-      const path = `${candidateId}.${ext}`;
+      // Validate file before upload
+      const validation = validateFile(file, 'code');
+      if (!validation.valid) {
+        throw new Error(validation.message);
+      }
+
+      // Generate secure filename (UUID-based)
+      const secureFilename = generateSecureFilename(file.name);
+      const path = `${candidateId}/${secureFilename}`;
 
       const { error } = await supabase.storage
         .from('code-submissions')
@@ -421,6 +435,9 @@ document.addEventListener('alpine:init', () => {
         }
 
         this.showCandidateModal = false;
+        this.candidateResume = null;
+        this.candidateCodeSubmission = null;
+        this.editingCandidate = null;
         await this.loadData();
       } catch (err) {
         this.showAlert('error', err.message || 'Failed to save candidate');

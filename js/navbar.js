@@ -42,10 +42,48 @@ document.addEventListener('alpine:init', () => {
 
     async handleLogout() {
       try {
-        await signOut();
+        const { error } = await signOut();
+
+        if (error) {
+          // Log sanitized error (no stack trace)
+          console.error('Logout failed:', error.message);
+          alert('Logout failed. Please try again.');
+          return;
+        }
+
+        // Clear Alpine store state
+        const store = Alpine.store('app');
+        store.session = null;
+        store.user = null;
+        store.mentor = null;
+        store.isAdmin = false;
+        store.authReady = false;
+
+        // Clear all arrays
+        store.mentors.splice(0, store.mentors.length);
+        store.trainees.splice(0, store.trainees.length);
+        store.weeks.splice(0, store.weeks.length);
+        store.tasks.splice(0, store.tasks.length);
+        store.progress.splice(0, store.progress.length);
+
+        // Clear localStorage (except UI preferences)
+        const uiPrefs = ['sidebarVisible', 'activityFeedVisible'];
+        const savedPrefs = {};
+        uiPrefs.forEach(key => {
+          savedPrefs[key] = localStorage.getItem(key);
+        });
+        localStorage.clear();
+        uiPrefs.forEach(key => {
+          if (savedPrefs[key] !== null) {
+            localStorage.setItem(key, savedPrefs[key]);
+          }
+        });
+
+        // Redirect to login
         window.location.href = '/';
       } catch (e) {
-        console.error('Logout error:', e);
+        console.error('Logout error:', e.message || 'Unknown error');
+        alert('Logout failed. Please try again.');
       }
     }
   }));
