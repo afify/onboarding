@@ -27,6 +27,12 @@
   align-items: center;
 }
 
+.cv-uploaded {
+  color: var(--status-done);
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Tabs */
 .tabs-container {
   margin-bottom: 1.5rem;

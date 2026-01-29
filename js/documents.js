@@ -63,37 +63,63 @@ document.addEventListener('alpine:init', () => {
       this.loading = true;
 
       try {
+        // Helper to list files recursively (handles subfolder structure)
+        const listFilesRecursively = async (bucket) => {
+          const allFiles = [];
+          const { data: rootItems, error } = await supabase.storage
+            .from(bucket)
+            .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+
+          if (error) throw error;
+
+          for (const item of (rootItems || [])) {
+            if (item.name === '.emptyFolderPlaceholder') continue;
+
+            if (item.metadata) {
+              // It's a file at root level
+              allFiles.push({ ...item, path: item.name });
+            } else {
+              // It's a folder - list files inside it
+              const { data: subFiles } = await supabase.storage
+                .from(bucket)
+                .list(item.name, { limit: 100 });
+
+              for (const subFile of (subFiles || [])) {
+                if (subFile.metadata && subFile.name !== '.emptyFolderPlaceholder') {
+                  allFiles.push({
+                    ...subFile,
+                    path: `${item.name}/${subFile.name}`,
+                    candidateId: item.name
+                  });
+                }
+              }
+            }
+          }
+          return allFiles;
+        };
+
         // Load resumes
-        const { data: resumeFiles, error: resumeError } = await supabase.storage
-          .from('resumes')
-          .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-
-        if (resumeError) throw resumeError;
-
-        this.resumes = (resumeFiles || [])
-          .filter(f => f.name !== '.emptyFolderPlaceholder')
-          .map(f => ({
-            ...f,
-            bucket: 'resumes',
-            candidateName: this.getCandidateNameByResumePath(f.name)
-          }));
+        const resumeFiles = await listFilesRecursively('resumes');
+        this.resumes = resumeFiles.map(f => ({
+          ...f,
+          bucket: 'resumes',
+          candidateName: this.getCandidateNameByResumePath(f.candidateId || f.name)
+        }));
 
         // Load code submissions
-        const { data: codeFiles, error: codeError } = await supabase.storage
-          .from('code-submissions')
-          .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-
-        if (codeError && codeError.message !== 'The resource was not found') {
-          throw codeError;
-        }
-
-        this.codeSubmissions = (codeFiles || [])
-          .filter(f => f.name !== '.emptyFolderPlaceholder')
-          .map(f => ({
+        try {
+          const codeFiles = await listFilesRecursively('code-submissions');
+          this.codeSubmissions = codeFiles.map(f => ({
             ...f,
             bucket: 'code-submissions',
-            candidateName: this.getCandidateNameByCodePath(f.name)
+            candidateName: this.getCandidateNameByCodePath(f.candidateId || f.name)
           }));
+        } catch (codeError) {
+          if (codeError.message !== 'The resource was not found') {
+            throw codeError;
+          }
+          this.codeSubmissions = [];
+        }
 
       } catch (err) {
         console.error('Error loading documents:', err);
@@ -185,14 +211,17 @@ document.addEventListener('alpine:init', () => {
       if (!this.deleteTarget) return;
 
       try {
+        // Use path for files in subfolders, otherwise use name
+        const filePath = this.deleteTarget.path || this.deleteTarget.name;
         const { error } = await supabase.storage
           .from(this.deleteTarget.bucket)
-          .remove([this.deleteTarget.name]);
+          .remove([filePath]);
 
         if (error) throw error;
 
-        // Also clear resume_path or code_submission_path from candidate if linked
-        const candidateId = this.deleteTarget.name.replace(/\.[^/.]+$/, '');
+        // Extract candidateId from subfolder path or filename
+        const candidateId = this.deleteTarget.candidateId ||
+          this.deleteTarget.name.replace(/\.[^/.]+$/, '');
         const updateField = this.deleteTarget.bucket === 'resumes'
           ? { resume_path: null }
           : { code_submission_path: null };

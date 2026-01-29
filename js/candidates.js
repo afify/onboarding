@@ -256,11 +256,16 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async uploadResume(file, candidateId) {
+    async uploadResume(file, candidateId, oldPath = null) {
       // Validate file before upload
       const validation = validateFile(file, 'resume');
       if (!validation.valid) {
         throw new Error(validation.message);
+      }
+
+      // Delete old file if exists
+      if (oldPath) {
+        await supabase.storage.from('resumes').remove([oldPath]);
       }
 
       // Generate secure filename (UUID-based)
@@ -275,11 +280,16 @@ document.addEventListener('alpine:init', () => {
       return path;
     },
 
-    async uploadCodeSubmission(file, candidateId) {
+    async uploadCodeSubmission(file, candidateId, oldPath = null) {
       // Validate file before upload
       const validation = validateFile(file, 'code');
       if (!validation.valid) {
         throw new Error(validation.message);
+      }
+
+      // Delete old file if exists
+      if (oldPath) {
+        await supabase.storage.from('code-submissions').remove([oldPath]);
       }
 
       // Generate secure filename (UUID-based)
@@ -381,12 +391,14 @@ document.addEventListener('alpine:init', () => {
           };
 
           if (this.candidateResume) {
-            const resumePath = await this.uploadResume(this.candidateResume, this.editingCandidate.id);
+            const oldResumePath = this.editingCandidate.resume_path || null;
+            const resumePath = await this.uploadResume(this.candidateResume, this.editingCandidate.id, oldResumePath);
             updateData.resume_path = resumePath;
           }
 
           if (this.candidateCodeSubmission) {
-            const codePath = await this.uploadCodeSubmission(this.candidateCodeSubmission, this.editingCandidate.id);
+            const oldCodePath = this.editingCandidate.code_submission_path || null;
+            const codePath = await this.uploadCodeSubmission(this.candidateCodeSubmission, this.editingCandidate.id, oldCodePath);
             updateData.code_submission_path = codePath;
           }
 
