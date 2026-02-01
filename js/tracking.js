@@ -181,11 +181,28 @@ document.addEventListener('alpine:init', () => {
       return doneStatus?.id || null;
     },
 
+    hasTraineeCompletedAllTasks(traineeId) {
+      const doneStatusId = this.getDoneStatusId();
+      if (!doneStatusId || this.tasks.length === 0) return false;
+
+      const completedCount = this.tasks.filter(task => {
+        const prog = this.progress.find(p => p.trainee_id === traineeId && p.task_id === task.id);
+        return prog?.status_id === doneStatusId;
+      }).length;
+
+      return completedCount === this.tasks.length;
+    },
+
     getFilteredTasks() {
       const result = [];
 
       for (const trainee of this.trainees) {
         if (this.filterTrainee && trainee.id !== this.filterTrainee) {
+          continue;
+        }
+
+        // Hide trainees who have completed 100% of their tasks
+        if (this.hasTraineeCompletedAllTasks(trainee.id)) {
           continue;
         }
 
