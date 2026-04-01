@@ -1,5 +1,6 @@
 import { supabase, signOut } from './supabase-client.js';
 import { isValidEmail, isValidName, sanitizeInput, escapeHtml } from './security.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName, formatTime as _formatTime } from './utils.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('dashboard', () => ({
@@ -111,7 +112,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getStatusByName(statusName) {
@@ -124,8 +125,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unassigned';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     getMentorInitials(mentorId) {
@@ -400,31 +400,31 @@ document.addEventListener('alpine:init', () => {
       const existingProgress = this.progress.find(p => p.trainee_id === traineeId && p.task_id === taskId);
 
       if (existingProgress) {
-        await supabase
+        const { error } = await supabase
           .from('progress')
           .update({ status: newStatus, updated_by_mentor_id: this.currentMentor.id, updated_at: new Date().toISOString() })
           .eq('id', existingProgress.id);
+        if (error) {
+          this.showAlert('error', 'Failed to update status');
+          return;
+        }
+        existingProgress.status = newStatus;
       } else {
-        await supabase
+        const { data, error } = await supabase
           .from('progress')
           .insert({
             trainee_id: traineeId,
             task_id: taskId,
             status: newStatus,
             updated_by_mentor_id: this.currentMentor.id
-          });
-      }
-
-      if (existingProgress) {
-        existingProgress.status = newStatus;
-      } else {
-        this.progress.push({
-          id: crypto.randomUUID(),
-          trainee_id: traineeId,
-          task_id: taskId,
-          status: newStatus,
-          updated_by_mentor_id: this.currentMentor.id
-        });
+          })
+          .select()
+          .single();
+        if (error) {
+          this.showAlert('error', 'Failed to update status');
+          return;
+        }
+        this.progress.push(data);
       }
     },
 
@@ -565,14 +565,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     formatTime(timestamp) {
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diff = Math.floor((now - date) / 1000);
-
-      if (diff < 60) return 'Just now';
-      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-      return Alpine.store('app').formatDate(date);
+      return _formatTime(timestamp, (d) => Alpine.store('app').formatDate(d));
     },
 
     formatActivity(activity) {

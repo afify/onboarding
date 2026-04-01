@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { isValidEmail, isValidName, sanitizeInput, validateFile, generateSecureFilename } from './security.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName } from './utils.js';
 import {
   colors,
   addHeader,
@@ -127,8 +128,7 @@ document.addEventListener('alpine:init', () => {
 
     // Utility methods
     getInitials(name) {
-      if (!name) return '?';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getStageName(stageId) {
@@ -142,8 +142,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unknown';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     formatDecision(decision) {
@@ -747,11 +746,12 @@ document.addEventListener('alpine:init', () => {
     async executeDelete() {
       try {
         if (this.deleteType === 'stage') {
-          await supabase
+          const { error } = await supabase
             .from('interview_stages')
-            .delete()
+            .update({ is_active: false })
             .eq('id', this.deleteTarget.id);
-          this.showAlert('success', 'Stage deleted');
+          if (error) throw error;
+          this.showAlert('success', 'Stage deactivated');
         } else if (this.deleteType === 'criteria') {
           await supabase
             .from('stage_criteria')

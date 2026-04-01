@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+import { formatTime as _formatTime } from './utils.js';
 
 const activityHTML = `
   <div class="activity-feed-wrapper" x-data="activityFeed">
@@ -237,18 +238,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     formatTime(timestamp) {
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diff = now - date;
-      const mins = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-
-      if (mins < 1) return 'Just now';
-      if (mins < 60) return mins + 'm ago';
-      if (hours < 24) return hours + 'h ago';
-      if (days < 7) return days + 'd ago';
-      return this.formatDate(date);
+      return _formatTime(timestamp, (d) => this.formatDate(d));
     },
 
     formatDate(date) {

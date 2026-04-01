@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { supabase } from './supabase-client.js';
 import { isValidEmail, isValidName, sanitizeInput, escapeHtml } from './security.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName } from './utils.js';
 
 const rawCompany = import.meta.env.VITE_COMPANY || 'Company';
 const company = escapeHtml(rawCompany);
@@ -69,12 +70,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unassigned';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     getMentorNames(mentorIds) {

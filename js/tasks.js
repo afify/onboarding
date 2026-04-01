@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './security.js';
+import { getInitials as _getInitials } from './utils.js';
 
 const rawCompany = import.meta.env.VITE_COMPANY || 'Company';
 const company = escapeHtml(rawCompany);
@@ -76,8 +77,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInitials(name) {
-      if (!name) return '??';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getCategory(categoryId) {

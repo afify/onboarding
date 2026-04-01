@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { isValidEmail, isValidName, validatePassword, sanitizeInput } from './security.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName } from './utils.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('adminPanel', () => ({
@@ -78,12 +79,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unassigned';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     getMentorTraineeCount(mentorId) {

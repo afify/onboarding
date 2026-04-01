@@ -257,11 +257,12 @@ document.addEventListener('alpine:init', () => {
     async executeDelete() {
       try {
         if (this.deleteType === 'stage') {
-          await supabase
+          const { error } = await supabase
             .from('interview_stages')
-            .delete()
+            .update({ is_active: false })
             .eq('id', this.deleteTarget.id);
-          this.showAlert('success', 'Stage deleted');
+          if (error) throw error;
+          this.showAlert('success', 'Stage deactivated');
         } else if (this.deleteType === 'criteria') {
           await supabase
             .from('stage_criteria')

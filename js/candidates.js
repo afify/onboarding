@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { isValidEmail, isValidName, sanitizeInput, validateFile, generateSecureFilename } from './security.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName } from './utils.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('candidatesPage', () => ({
@@ -116,8 +117,7 @@ document.addEventListener('alpine:init', () => {
 
     // Utility methods
     getInitials(name) {
-      if (!name) return '?';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getAvatarColor(name) {
@@ -141,8 +141,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unknown';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     formatStatus(status) {

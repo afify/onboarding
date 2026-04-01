@@ -310,37 +310,37 @@ export function initStore(Alpine) {
 
     async refreshWeeks() {
       const { data } = await supabase.from('weeks').select('*').order('week_number');
-      this.weeks = data || [];
+      this.weeks.splice(0, this.weeks.length, ...(data || []));
     },
 
     async refreshTasks() {
       const { data } = await supabase.from('tasks').select('*').order('order_index');
-      this.tasks = data || [];
+      this.tasks.splice(0, this.tasks.length, ...(data || []));
     },
 
     async refreshCategories() {
       const { data } = await supabase.from('task_categories').select('*').order('id');
-      this.categories = data || [];
+      this.categories.splice(0, this.categories.length, ...(data || []));
     },
 
     async refreshStatuses() {
       const { data } = await supabase.from('task_statuses').select('*').order('sort_order');
-      this.statuses = data || [];
+      this.statuses.splice(0, this.statuses.length, ...(data || []));
     },
 
     async refreshTrainees() {
       const { data } = await supabase.from('candidates').select('*').eq('type', 'trainee').order('created_at');
-      this.trainees = data || [];
+      this.trainees.splice(0, this.trainees.length, ...(data || []));
     },
 
     async refreshMentors() {
       const { data } = await supabase.from('mentors').select('*').order('created_at');
-      this.mentors = data || [];
+      this.mentors.splice(0, this.mentors.length, ...(data || []));
     },
 
     async refreshProgress() {
       const { data } = await supabase.from('progress').select('*');
-      this.progress = data || [];
+      this.progress.splice(0, this.progress.length, ...(data || []));
     },
 
     // Interview Pipeline Refresh Methods

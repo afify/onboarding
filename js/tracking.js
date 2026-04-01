@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+import { getInitials as _getInitials, getMentorName as _getMentorName, formatTime as _formatTime } from './utils.js';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('tracking', () => ({
@@ -90,12 +91,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     getInitials(name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return _getInitials(name);
     },
 
     getMentorName(mentorId) {
-      const mentor = this.mentors.find(m => m.id === mentorId);
-      return mentor?.name || 'Unknown';
+      return _getMentorName(this.mentors, mentorId);
     },
 
     getWeekNumber(weekId) {
@@ -135,16 +135,7 @@ document.addEventListener('alpine:init', () => {
 
 
     formatTime(timestamp) {
-      if (!timestamp) return '-';
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diff = Math.floor((now - date) / 1000);
-
-      if (diff < 60) return 'Just now';
-      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-      if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-      return Alpine.store('app').formatDate(date);
+      return _formatTime(timestamp, (d) => Alpine.store('app').formatDate(d));
     },
 
     getTotalTasksCount() {
