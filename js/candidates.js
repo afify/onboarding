@@ -172,6 +172,14 @@ document.addEventListener('alpine:init', () => {
       return this.editingCandidate ? this.editingCandidate.resume_path : '';
     },
 
+    get hasExistingCodeSubmission() {
+      return this.editingCandidate && this.editingCandidate.code_submission_path;
+    },
+
+    get existingCodeSubmissionPath() {
+      return this.editingCandidate ? this.editingCandidate.code_submission_path : '';
+    },
+
     getDeleteTargetName() {
       return this.deleteTarget ? this.deleteTarget.name : '';
     },
@@ -436,10 +444,12 @@ document.addEventListener('alpine:init', () => {
               updateData.code_submission_path = await this.uploadCodeSubmission(this.candidateCodeSubmission, newCandidate.id);
             }
 
-            await supabase
+            const { error: updateError } = await supabase
               .from('candidates')
               .update(updateData)
               .eq('id', newCandidate.id);
+
+            if (updateError) throw updateError;
           }
 
           this.showAlert('success', `Candidate "${name}" added`);

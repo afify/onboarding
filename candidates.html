@@ -210,7 +210,7 @@
     <div class="modal-overlay" x-show="showCandidateModal" x-cloak @click.self="showCandidateModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h2 class="modal-title" x-text="editingCandidate ? 'Edit Candidate' : 'Add Candidate'"></h2>
+          <h2 class="modal-title" x-text="modalTitle"></h2>
           <button class="modal-close" @click="showCandidateModal = false">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -253,14 +253,14 @@
 
           <div class="form-group">
             <label class="form-label" for="candidateResume">Resume</label>
-            <input type="file" id="candidateResume" class="form-input" @change="handleResumeUpload" accept=".pdf,.doc,.docx">
-            <span class="form-hint" x-show="editingCandidate && editingCandidate.resume_path">Current: <span x-text="editingCandidate ? editingCandidate.resume_path : ''"></span></span>
+            <input type="file" id="candidateResume" class="form-input file-input" @change="handleResumeUpload($event)" accept=".pdf,.doc,.docx">
+            <span class="form-hint" x-show="hasExistingResume">Current: <span x-text="existingResumePath"></span></span>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="candidateCodeSubmission">Code Submission</label>
-            <input type="file" id="candidateCodeSubmission" class="form-input" @change="handleCodeSubmissionUpload" accept=".zip">
-            <span class="form-hint" x-show="editingCandidate && editingCandidate.code_submission_path">Current: <span x-text="editingCandidate ? editingCandidate.code_submission_path : ''"></span></span>
+            <input type="file" id="candidateCodeSubmission" class="form-input file-input" @change="handleCodeSubmissionUpload($event)" accept=".zip">
+            <span class="form-hint" x-show="hasExistingCodeSubmission">Current: <span x-text="existingCodeSubmissionPath"></span></span>
           </div>
 
           <div class="form-group">
@@ -270,7 +270,7 @@
 
           <div class="modal-actions">
             <button type="button" class="btn-secondary" @click="showCandidateModal = false">Cancel</button>
-            <button type="submit" class="btn-primary" x-text="editingCandidate ? 'Save Changes' : 'Add Candidate'"></button>
+            <button type="submit" class="btn-primary" x-text="submitButtonText"></button>
           </div>
         </form>
       </div>
