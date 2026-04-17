@@ -1305,9 +1305,14 @@ document.addEventListener('alpine:init', () => {
 
       // === STAGE REPORTS ===
       for (const stage of data.stages) {
-        // Estimate height needed for this stage (tight estimate)
+        // Wrap notes up front so the page-break estimate matches what we actually render
+        const notesLines = stage.notes
+          ? doc.splitTextToSize(stage.notes, contentWidth - 10)
+          : null;
+        const notesBoxHeight = notesLines ? 8 + notesLines.length * 4 : 0;
+
         const criteriaHeight = stage.criteria ? stage.criteria.length * 6 + 14 : 0;
-        const notesHeight = stage.notes ? 14 : 0;
+        const notesHeight = notesBoxHeight ? notesBoxHeight + 6 : 0;
         const stageHeight = 24 + criteriaHeight + notesHeight;
 
         y = pdfCheckPageBreak(doc, y, stageHeight, 12);
@@ -1426,12 +1431,12 @@ document.addEventListener('alpine:init', () => {
         }
 
         // Notes section
-        if (stage.notes) {
+        if (notesLines) {
           y += 4; // Add padding-top (~10px) before notes
-          y = pdfCheckPageBreak(doc, y, 14);
+          y = pdfCheckPageBreak(doc, y, notesBoxHeight);
           doc.setFillColor(255, 251, 235);
           doc.setDrawColor(251, 191, 36);
-          doc.roundedRect(margin, y, contentWidth, 12, 2, 2, 'FD');
+          doc.roundedRect(margin, y, contentWidth, notesBoxHeight, 2, 2, 'FD');
 
           doc.setTextColor(...colors.textMuted);
           doc.setFontSize(7);
@@ -1441,9 +1446,8 @@ document.addEventListener('alpine:init', () => {
           doc.setTextColor(...colors.textDark);
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');
-          const notesLines = doc.splitTextToSize(stage.notes, contentWidth - 10);
-          doc.text(notesLines.slice(0, 2).join(' '), margin + 4, y + 9);
-          y += 14;
+          doc.text(notesLines, margin + 4, y + 9);
+          y += notesBoxHeight + 2;
         }
 
         y += 2;
